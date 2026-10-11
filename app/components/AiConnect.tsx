@@ -68,7 +68,7 @@ export default function AiConnect({opens}: {opens: number}) {
       aria-labelledby="ai-connect-title"
       // Clicking the dimmed backdrop (the dialog element itself, outside the panel) closes it.
       onClick={(e) => e.target === e.currentTarget && dialog.current?.close()}
-      className="sf-panel sf-pop m-auto max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border p-0 font-mono text-white [text-shadow:none] backdrop:bg-slate-950/55 backdrop:backdrop-blur-[2px]"
+      className="sf-panel sf-pop sf-dialog-fit m-auto w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border p-0 font-mono text-white [text-shadow:none] backdrop:bg-slate-950/55 backdrop:backdrop-blur-[2px]"
     >
       <div className="p-5 sm:p-6">
         <div className="flex items-start justify-between gap-4">

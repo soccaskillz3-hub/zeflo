@@ -38,6 +38,13 @@ function WeekView({start, today}: {start: string; today: string}) {
     loadDays(start, end);
   }, [start, end, loadDays]);
 
+  // Seven columns don't fit a phone, so phones get the day view: today if it's in this week,
+  // else the week's first day.
+  const phoneDay = days.includes(today) ? today : start;
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 639px)").matches) router.replace(`/calendar?day=${phoneDay}`);
+  }, [router, phoneDay]);
+
   useEffect(() => {
     const tick = () => setClock(nowMinutes());
     tick();

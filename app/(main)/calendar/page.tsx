@@ -657,7 +657,9 @@ function DayView({day, isToday}: {day: string; isToday: boolean}) {
         <div
           role="dialog"
           aria-label="Add a session"
-          className="fixed inset-x-0 bottom-0 z-[60] px-3 pb-3"
+          className="fixed inset-x-0 bottom-0 z-[60] px-3"
+          // Above Safari's toolbar and the home indicator on phones that have them.
+          style={{paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))"}}
           onKeyDown={(e) => {
             if (e.key === "Escape") closeComposer();
           }}

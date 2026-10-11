@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono, Jost } from "next/font/google";
 import "./globals.css";
 import { AccountProvider } from "./lib/account";
@@ -39,6 +39,14 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "Zeflo",
   description: "Plan your study day and track your progress.",
+};
+
+// Draw edge to edge, under the iPhone's status bar and Safari's toolbar, so the scene fills the
+// whole screen. The body's padding (globals.css) keeps the app itself clear of them.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

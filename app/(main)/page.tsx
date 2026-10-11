@@ -155,7 +155,11 @@ function WeekSummary({
             <p className="mt-4 text-sm leading-relaxed text-white/70">
               Plan a few study sessions and your week fills in here, day by day.
             </p>
-            <Link href="/calendar/week" className={`mt-5 inline-block ${primaryButton}`}>
+            {/* The week view on wider screens; phones plan day by day. */}
+            <Link href="/calendar/week" className={`mt-5 hidden sm:inline-block ${primaryButton}`}>
+              Plan your week
+            </Link>
+            <Link href="/calendar" className={`mt-5 inline-block sm:hidden ${primaryButton}`}>
               Plan your week
             </Link>
           </div>

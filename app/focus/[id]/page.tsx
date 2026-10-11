@@ -268,7 +268,7 @@ export default function FocusPage() {
 
   return (
     <div
-      className={`sf-focus fixed inset-0 flex flex-col font-mono text-white transition-opacity duration-500 ${leaving ? "opacity-0" : ""}`}
+      className={`sf-focus sf-safe fixed inset-0 flex flex-col font-mono text-white transition-opacity duration-500 ${leaving ? "opacity-0" : ""}`}
       data-phase={celebrating ? "complete" : phase}
     >
       <SnowPile snowing={snowing} />

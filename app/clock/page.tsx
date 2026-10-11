@@ -244,7 +244,7 @@ export default function ClockPage({searchParams}: PageProps<"/clock">) {
 
   return (
     <div
-      className={`sf-clock fixed inset-0 flex flex-col font-mono text-white transition-opacity duration-500 ${
+      className={`sf-clock sf-safe fixed inset-0 flex flex-col font-mono text-white transition-opacity duration-500 ${
         idle && !drag ? "cursor-none" : ""
       } ${leaving ? "opacity-0" : ""}`}
     >

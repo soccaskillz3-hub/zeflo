@@ -9,8 +9,9 @@ import {formatDay} from "../lib/days";
 import {useSchedule} from "../lib/schedule";
 import {useDismiss} from "../lib/useDismiss";
 
+// The week view needs seven columns, so phones (narrower than Tailwind's sm) don't get it.
 const CALENDAR_PAGES = [
-  {href: "/calendar/week", label: "Week view", hint: "The whole week at a glance"},
+  {href: "/calendar/week", label: "Week view", hint: "The whole week at a glance", wideOnly: true},
   {href: "/calendar", label: "Day view", hint: "One day, hour by hour"},
   {href: "/calendar/schedule", label: "Schedule", hint: "List and add today's sessions"},
 ];
@@ -61,7 +62,7 @@ function CalendarMenu({pathname}: {pathname: string}) {
                 aria-current={current ? "page" : undefined}
                 className={`block rounded-lg px-3 py-2.5 transition ${
                   current ? "sf-panel-active" : "hover:bg-white/[0.08]"
-                }`}
+                } ${page.wideOnly ? "max-sm:hidden" : ""}`}
               >
                 <span className="block text-xs uppercase tracking-[0.25em] text-white">
                   {page.label}

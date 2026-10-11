@@ -40,7 +40,7 @@ export default function DeleteAccount({opens}: {opens: number}) {
       ref={dialog}
       aria-labelledby="delete-account-title"
       onClick={(e) => e.target === e.currentTarget && dialog.current?.close()}
-      className="sf-panel sf-pop m-auto w-[min(26rem,calc(100vw-2rem))] rounded-2xl border p-0 font-mono text-white [text-shadow:none] backdrop:bg-slate-950/55 backdrop:backdrop-blur-[2px]"
+      className="sf-panel sf-pop sf-dialog-fit m-auto w-[min(26rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border p-0 font-mono text-white [text-shadow:none] backdrop:bg-slate-950/55 backdrop:backdrop-blur-[2px]"
     >
       <form action={action} className="p-5 sm:p-6">
         <p className="text-[11px] uppercase tracking-[0.25em] text-rose-200/80">Delete account</p>

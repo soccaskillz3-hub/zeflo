@@ -111,6 +111,18 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  /* The page draws under the status bar and Safari's toolbar (viewport-fit=cover, in the root
+     layout); this keeps the app itself out from under them. Zero on screens without them. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* The same, for full-screen layers (the timer, the clock) and panels pinned to an edge. */
+.sf-safe {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+/* Pop-up windows: never taller than the space between the bars. */
+.sf-dialog-fit {
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
 /* Floating UI: no panels, so text carries its own soft shadow to separate it from the sky. */
