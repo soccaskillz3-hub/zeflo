@@ -4,7 +4,7 @@
 
 Zeflo is a calm study planner for students. Bring in your class timetable, plan study sessions around it (or ask your own AI to plan them for you), run a full-screen focus timer or clock for each one, and watch your streak and progress fill in — all floating over a living scene, an ocean or a forest, that follows the real weather and time of day where you are, with sound to match.
 
-**Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.3.3
+**Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.3.4
 
 <p>
   <img src="docs/screenshots/forest-day.jpg" alt="Today in the forest theme on a clear day, with light falling through the trees" width="49%">
@@ -204,6 +204,7 @@ app/
 │   └── …                       # Header, session form and list
 └── lib/
     ├── scene.tsx               # Theme, live weather and time of day
+    ├── sceneScript.ts          # Sets the scene before the first paint (for Safari's status bar)
     ├── sound.tsx               # Sound settings, starts the soundscape
     ├── audio/
     │   ├── engine.ts           # The Web Audio graph, volumes, noise

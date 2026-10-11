@@ -2,6 +2,7 @@
 
 import {createContext, useContext, useEffect, useState, type ReactNode} from "react";
 import Backdrop from "../components/backdrop/Backdrop";
+import {SCENE_KEY} from "./sceneScript";
 import {THEME_IDS, type Theme} from "./themes";
 import {fetchWeather, timeOfDay, TIMES, WEATHERS, type SunTimes, type TimeOfDay, type Weather} from "./weather";
 
@@ -55,6 +56,9 @@ export function SceneProvider({children}: {children: ReactNode}) {
   const [theme, setTheme] = useState<Theme>("ocean");
   const [weatherOverride, setWeatherOverride] = useState<Weather | null>(null);
   const [timeOverride, setTimeOverride] = useState<TimeOfDay | null>(null);
+  // The weather shown last time (if recent), so the scene doesn't flash clear skies while the
+  // live weather loads.
+  const [rememberedWeather, setRememberedWeather] = useState<Weather | null>(null);
   // Null until mounted: the server can't know the visitor's local time, so the scene
   // stays hidden until the client picks the right sky, then fades in.
   const [now, setNow] = useState<Date | null>(null);
@@ -65,6 +69,12 @@ export function SceneProvider({children}: {children: ReactNode}) {
     setTheme(readOverride(THEME_KEY, THEME_IDS) ?? "ocean");
     setWeatherOverride(readOverride(WEATHER_OVERRIDE_KEY, WEATHERS));
     setTimeOverride(readOverride(TIME_OVERRIDE_KEY, TIMES));
+    try {
+      const last = JSON.parse(localStorage.getItem(SCENE_KEY) ?? "null");
+      if (last && Date.now() - last.at < 30 * 60 * 1000 && WEATHERS.includes(last.weather)) setRememberedWeather(last.weather);
+    } catch {
+      // Nothing remembered.
+    }
     const id = setInterval(() => setNow(new Date()), 60 * 1000);
     // In development, window.__zefloScene switches the scene from the console (for testing
     // transitions without the menu). It isn't saved. Left out of production builds.
@@ -105,15 +115,23 @@ export function SceneProvider({children}: {children: ReactNode}) {
     };
   }, []);
 
-  const weather = weatherOverride ?? live?.weather ?? "clear";
+  const weather = weatherOverride ?? live?.weather ?? rememberedWeather ?? "clear";
   const time = timeOverride ?? (now ? timeOfDay(now, live?.sun) : "night");
 
-  // Expose the scene on <html> so CSS can theme panels and menus to match the sky.
+  // Expose the scene on <html> so CSS can theme panels and menus to match the sky, and remember
+  // it so the next page load can paint it from the start (see sceneScript.ts). Not before the
+  // client clock is known: until then this would be a guess, over the one the head script made.
   useEffect(() => {
+    if (!now) return;
     document.documentElement.dataset.theme = theme;
     document.documentElement.dataset.weather = weather;
     document.documentElement.dataset.time = time;
-  }, [theme, weather, time]);
+    try {
+      localStorage.setItem(SCENE_KEY, JSON.stringify({theme, time, weather, at: Date.now()}));
+    } catch {
+      // Not remembered; the next load works the scene out from the clock instead.
+    }
+  }, [now, theme, weather, time]);
 
   const chooseTheme = (t: Theme) => {
     setTheme(t);

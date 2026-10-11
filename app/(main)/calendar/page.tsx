@@ -363,7 +363,9 @@ function DayView({day, isToday}: {day: string; isToday: boolean}) {
         </p>
         <button
           type="button"
-          onClick={() => openComposer(now === null ? 9 * 60 : Math.ceil((now + 1) / SNAP) * SNAP)}
+          // The next free slot from now, or 9 AM on another day or in the small hours (as the
+          // timeline itself skips them; see hourRange).
+          onClick={() => openComposer(now === null || now < 5 * 60 ? 9 * 60 : Math.ceil((now + 1) / SNAP) * SNAP)}
           className="border border-scene/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 active:scale-[0.98]"
         >
           + Add

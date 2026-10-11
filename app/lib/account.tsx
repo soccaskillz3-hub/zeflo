@@ -25,6 +25,7 @@ const LOCAL_KEYS = [
   "studyflow:weather-override",
   "studyflow:time-override",
   "studyflow:sound-v2",
+  "studyflow:scene",
 ];
 
 export function forgetThisBrowser() {

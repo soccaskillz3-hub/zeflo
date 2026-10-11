@@ -6,6 +6,7 @@ import { ClassesProvider } from "./lib/classes";
 import { PrefsProvider } from "./lib/prefs";
 import { getUser } from "./lib/dal";
 import { SceneProvider } from "./lib/scene";
+import { SCENE_SCRIPT } from "./lib/sceneScript";
 import { ScheduleProvider } from "./lib/schedule";
 import { SettingsSync } from "./lib/settingsSync";
 import { SoundProvider } from "./lib/sound";
@@ -56,7 +57,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${jost.variable} ${fraunces.variable} h-full antialiased`}
+      // The head script sets the scene's data attributes before React loads.
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCENE_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <AccountProvider account={user}>
           <SceneProvider>
