@@ -9,6 +9,10 @@ import {useScene, type ScenePreview} from "../lib/scene";
 // scrolls past it; scroll position becomes --p and per-chapter progress --c0…--c4 (set here,
 // on the stage, each frame), and the CSS in globals.css (.wl-*) turns those into motion.
 // Plain CSS 3D rather than WebGL, so text stays sharp and phones stay smooth.
+//
+// Each chapter is also a resting point (CSS scroll snapping, .wl-snap): wherever a scroll
+// ends, the page glides onto the nearest chapter with its animation finished, and a fast flick
+// stops at the next one rather than skipping past it.
 
 const CHAPTERS = [
   {
@@ -43,7 +47,7 @@ const CHAPTERS = [
   },
 ];
 
-// The skies chapter 4 runs through, on the real backdrop behind the page.
+// The skies chapter 4 plays through by itself, on the real backdrop behind the page.
 const SKIES: (ScenePreview & {label: string; clock: string})[] = [
   {theme: "ocean", time: "sunrise", weather: "clear", label: "Sunrise", clock: "6:40 AM"},
   {theme: "ocean", time: "day", weather: "cloudy", label: "A grey afternoon", clock: "1:15 PM"},
@@ -94,6 +98,11 @@ const HEAT = Array.from({length: WEEKS * 7}, (_, i) => {
 });
 const WEEK_BARS = [0.55, 0.8, 0.35, 0.95, 0.7, 0.25, 0.6];
 
+const SKY_MS = 2600;
+// Where in its stretch each chapter rests: late enough that its animation has finished, early
+// enough that its words are still fully shown.
+const REST = 0.8;
+
 const clamp = (n: number) => Math.min(1, Math.max(0, n));
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
@@ -119,7 +128,8 @@ export default function Story() {
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const [chapter, setChapter] = useState(0);
-  const [sky, setSky] = useState<number | null>(null);
+  const [skyStep, setSkyStep] = useState(0);
+  const snaps = useRef<(HTMLSpanElement | null)[]>([]);
   const {previewScene} = useScene();
 
   useEffect(() => {
@@ -147,8 +157,7 @@ export default function Story() {
       }
       const at = Math.min(n - 1, Math.floor(x));
       st.dataset.chapter = String(at);
-      setChapter(at);
-      setSky(x >= 3 && x < 4 ? Math.min(SKIES.length - 1, Math.floor((x - 3) * SKIES.length)) : null);
+      setChapter(x >= n ? n : at); // n: scrolled past the story
     };
 
     // Eases towards the scroll position (and the pointer) rather than snapping to it, so the
@@ -171,6 +180,13 @@ export default function Story() {
       look.ty = (e.clientY / window.innerHeight) * 2 - 1;
       if (!raf) raf = requestAnimationFrame(frame);
     };
+    // Puts each chapter's resting point where the story shows that chapter at REST. The page
+    // snaps below the status bar (scroll-padding-top), hence the body's top padding.
+    const place = () => {
+      const run = el.offsetHeight - window.innerHeight;
+      const inset = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+      snaps.current.forEach((s, i) => s && (s.style.top = `${((i + REST) / n) * run + inset}px`));
+    };
     const measure = () => {
       const r = el.getBoundingClientRect();
       const run = r.height - window.innerHeight;
@@ -178,19 +194,34 @@ export default function Story() {
       if (!raf) raf = requestAnimationFrame(frame);
     };
 
-    measure();
+    const resize = () => {
+      place();
+      measure();
+    };
+
+    resize();
     window.addEventListener("scroll", measure, {passive: true});
-    window.addEventListener("resize", measure);
+    window.addEventListener("resize", resize);
     window.addEventListener("pointermove", point, {passive: true});
     return () => {
       window.removeEventListener("pointermove", point);
       window.removeEventListener("scroll", measure);
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", resize);
       cancelAnimationFrame(raf);
     };
   }, []);
 
-  // The skies show on the real backdrop, and go back to the visitor's own when they scroll on.
+  // On the skies chapter, step through them; they go back to the visitor's own when they scroll on.
+  const skies = chapter === 3;
+  useEffect(() => {
+    if (!skies) return;
+    const id = setInterval(() => setSkyStep((s) => (s + 1) % SKIES.length), SKY_MS);
+    return () => {
+      clearInterval(id);
+      setSkyStep(0);
+    };
+  }, [skies]);
+  const sky = skies ? skyStep : null;
   useEffect(() => previewScene(sky === null ? null : SKIES[sky]), [sky, previewScene]);
   useEffect(() => () => previewScene(null), [previewScene]);
 
@@ -198,6 +229,17 @@ export default function Story() {
 
   return (
     <section ref={section} aria-label="How Zeflo works" className="wl-story">
+      {CHAPTERS.map((c, i) => (
+        <span
+          key={c.kicker}
+          ref={(s) => {
+            snaps.current[i] = s;
+          }}
+          className="wl-snap"
+          style={{top: `${((i + REST) / CHAPTERS.length) * 100}%`}}
+          aria-hidden
+        />
+      ))}
       <div ref={stage} className="wl-stage">
         <ol className="wl-copy">
           {CHAPTERS.map((c, i) => (
@@ -207,8 +249,8 @@ export default function Story() {
                 <span className="mx-2 text-white/30">/</span>
                 {c.kicker}
               </p>
-              <h2 className="wl-serif mt-4 text-[clamp(1.85rem,4.2vw,3.4rem)] leading-[1.02]">{c.title}</h2>
-              <p className="mt-5 max-w-md text-sm leading-relaxed text-white/80 sm:text-[15px]">{c.body}</p>
+              <h2 className="wl-serif mt-4 text-balance text-[clamp(1.85rem,4.2vw,3.4rem)] leading-[1.02]">{c.title}</h2>
+              <p className="mt-5 max-w-md text-pretty text-sm leading-relaxed text-white/80 sm:text-[15px]">{c.body}</p>
               <p className="wl-versus mt-5 max-w-md text-xs leading-relaxed text-white/55">
                 <span>Most planners:</span> {c.versus}
               </p>
@@ -254,7 +296,7 @@ export default function Story() {
                     <div
                       key={s.name}
                       className="wl-drop wl-session wl-block rounded-md border"
-                      style={{...place(s.start, s.end), "--a": 0.45 + i * 0.1} as CSSProperties}
+                      style={{...place(s.start, s.end), "--a": 0.38 + i * 0.09} as CSSProperties}
                     >
                       <span className="truncate text-white">{s.name}</span>
                       <span className="shrink-0 text-scene-soft">{s.at}</span>
@@ -310,12 +352,12 @@ export default function Story() {
               </div>
               <div className="wl-bars">
                 {WEEK_BARS.map((h, i) => (
-                  <span key={i} style={{"--h": h, "--a": i * 0.07} as CSSProperties} />
+                  <span key={i} style={{"--h": h, "--a": i * 0.05} as CSSProperties} />
                 ))}
               </div>
               <div className="wl-heat">
                 {HEAT.map((level, i) => (
-                  <span key={i} data-level={level} style={{"--a": 0.2 + (Math.floor(i / 7) / WEEKS) * 0.55} as CSSProperties} />
+                  <span key={i} data-level={level} style={{"--a": 0.15 + (Math.floor(i / 7) / WEEKS) * 0.55} as CSSProperties} />
                 ))}
               </div>
             </div>
@@ -330,6 +372,12 @@ export default function Story() {
               </span>
               <span className="wl-serif mt-3 block text-[clamp(2.4rem,6vw,4.75rem)] italic leading-none">{shownSky.label}</span>
             </p>
+            {/* Which sky of the five, filling as each one plays. */}
+            <div className="wl-sky-steps">
+              {SKIES.map((s, i) => (
+                <span key={s.label} data-state={sky === null || i > sky ? "next" : i === sky ? "now" : "seen"} />
+              ))}
+            </div>
           </div>
         </div>
 

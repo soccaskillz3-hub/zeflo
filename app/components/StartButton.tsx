@@ -53,7 +53,7 @@ function ClockPreview() {
 }
 
 const choiceButton =
-  "group flex flex-col items-center rounded-xl bg-white/[0.05] p-4 text-center transition hover:bg-white/[0.1] focus-visible:bg-white/[0.1] active:scale-[0.99]";
+  "group flex flex-col items-center rounded-xl bg-white/[0.05] p-4 text-center transition hover:bg-white/[0.1] focus-visible:bg-white/[0.1] sf-press";
 
 // "Start?" for a session. Opens the study timer or the clock, whichever the person has made
 // their default (Settings → Focus), or asks which one. The first time they pick, it also asks

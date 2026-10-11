@@ -16,7 +16,7 @@ const CAN = [
 // Enforced by the database for connected apps (supabase/migrations/20261010120000_ai_connector.sql).
 const CANNOT = ["See your password", "Change your classes or settings"];
 
-const button = "flex-1 px-5 py-3 text-xs font-semibold uppercase tracking-[0.25em] transition active:scale-[0.99] disabled:cursor-wait disabled:opacity-60";
+const button = "flex-1 px-5 py-3 text-xs font-semibold uppercase tracking-[0.25em] transition sf-press disabled:cursor-wait disabled:opacity-60";
 
 type State =
   | {step: "loading"}

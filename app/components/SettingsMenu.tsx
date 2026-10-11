@@ -207,7 +207,9 @@ function SoundTab() {
           onClick={() => update({enabled: !enabled})}
           className={`relative h-6 w-11 shrink-0 rounded-full transition ${enabled ? "bg-scene/80" : "bg-white/15"}`}
         >
-          <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${enabled ? "left-6" : "left-1"}`} />
+          <span
+            className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ease-out ${enabled ? "translate-x-5" : ""}`}
+          />
         </button>
       </div>
 
@@ -429,7 +431,7 @@ export default function SettingsMenu() {
         <div
           role="dialog"
           aria-label="Settings"
-          className="sf-panel sf-pop absolute right-0 top-full z-40 mt-3 w-[min(22rem,calc(100vw-2.5rem))] rounded-xl border p-4 [text-shadow:none]"
+          className="sf-panel sf-pop absolute right-0 top-full z-40 origin-top-right mt-3 w-[min(22rem,calc(100vw-2.5rem))] rounded-xl border p-4 [text-shadow:none]"
         >
           <div role="tablist" aria-label="Settings sections" onKeyDown={onTabKey} className="flex gap-1 rounded-lg bg-black/20 p-1">
             {TABS.map((t) => (

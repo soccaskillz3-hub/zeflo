@@ -16,13 +16,13 @@ function SignUpLinks() {
     <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
       <Link
         href="/signup"
-        className="border border-scene/70 bg-slate-950/20 px-6 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 active:scale-[0.98]"
+        className="border border-scene/70 bg-slate-950/20 px-6 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 sf-press"
       >
         Create an account
       </Link>
       <Link
         href="/login"
-        className="text-xs uppercase tracking-[0.25em] text-scene-soft underline decoration-scene/40 underline-offset-4 transition hover:text-scene-ink"
+        className="sf-press text-xs uppercase tracking-[0.25em] text-scene-soft underline decoration-scene/40 underline-offset-4 transition hover:text-scene-ink"
       >
         I already have one
       </Link>
@@ -47,7 +47,7 @@ export default async function WelcomePage({searchParams}: PageProps<"/welcome">)
           <div className="min-h-4">
             <LiveSky />
           </div>
-          <h1 className="wl-serif mt-6 max-w-4xl text-[clamp(2.9rem,8.4vw,7rem)] leading-[0.94]">
+          <h1 className="wl-serif mt-6 max-w-4xl text-balance text-[clamp(2.9rem,8.4vw,7rem)] leading-[0.94]">
             {HEADLINE.map((word, i) => (
               <span key={i}>
                 <span className="wl-word" style={{"--i": i} as CSSProperties}>
@@ -56,7 +56,7 @@ export default async function WelcomePage({searchParams}: PageProps<"/welcome">)
               </span>
             ))}
           </h1>
-          <p className="mt-7 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base">
+          <p className="mt-7 max-w-xl text-pretty text-sm leading-relaxed text-white/80 sm:text-base">
             Zeflo turns your class schedule into a study plan, then gets you through it: a focus timer, a streak to keep, and a sky that
             matches yours.
           </p>
@@ -72,12 +72,12 @@ export default async function WelcomePage({searchParams}: PageProps<"/welcome">)
 
       <Story />
 
-      <section className="mx-auto w-full max-w-6xl px-5 pb-28 pt-24 sm:px-10 sm:pt-32">
+      <section className="wl-end mx-auto w-full max-w-6xl px-5 pb-28 pt-24 sm:px-10 sm:pt-32">
         <p className="text-[11px] uppercase tracking-[0.3em] text-scene-ink">About a minute, start to finish</p>
-        <h2 className="wl-serif mt-5 max-w-3xl text-[clamp(2.3rem,6vw,4.75rem)] leading-[0.98]">
+        <h2 className="wl-serif mt-5 max-w-3xl text-balance text-[clamp(2.3rem,6vw,4.75rem)] leading-[0.98]">
           One paste. One question. <em>Your week&apos;s planned.</em>
         </h2>
-        <p className="mt-6 max-w-lg text-sm leading-relaxed text-white/80">
+        <p className="mt-6 max-w-lg text-pretty text-sm leading-relaxed text-white/80">
           Paste your classes, ask your AI to plan around them, press Start. Imports from Waterloo, TMU and York, or any school&apos;s
           calendar file. Your schedule and progress are private to your account.
         </p>

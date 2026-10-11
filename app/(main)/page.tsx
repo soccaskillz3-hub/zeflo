@@ -71,13 +71,13 @@ function ProgressLine({
     <div className="relative mt-10 h-14">
       <div className="absolute inset-x-0 top-5 h-px bg-white/30" />
       <div
-        className={`absolute left-0 top-[19px] h-[3px] rounded-full bg-scene shadow-[0_0_14px_var(--accent-glow)] transition-all ${speed} ease-out ${
+        className={`absolute left-0 top-[19px] h-[3px] rounded-full bg-scene shadow-[0_0_14px_var(--accent-glow)] transition-[width] ${speed} ease-out ${
           gain ? "sf-bar-boost" : ""
         }`}
         style={{width: `${pct}%`}}
       />
       <div
-        className={`absolute top-0 flex -translate-x-1/2 flex-col items-center transition-all ${speed} ease-out`}
+        className={`absolute top-0 flex -translate-x-1/2 flex-col items-center transition-[left] ${speed} ease-out`}
         style={{left: `${pct}%`}}
       >
         {gain !== null && (
@@ -114,9 +114,9 @@ function ProgressLine({
 
 const linkClass = "text-scene-soft underline decoration-scene/40 underline-offset-4 transition hover:text-scene-ink";
 const primaryButton =
-  "border border-scene/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 active:scale-[0.98]";
+  "border border-scene/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 sf-press";
 const secondaryButton =
-  "border border-white/30 px-4 py-1.5 text-xs uppercase tracking-[0.25em] text-white/80 transition hover:border-white/60 hover:text-white active:scale-[0.98]";
+  "border border-white/30 px-4 py-1.5 text-xs uppercase tracking-[0.25em] text-white/80 transition hover:border-white/60 hover:text-white sf-press";
 
 // The week at a glance: time studied against planned, the streak, and a bar for each day.
 function WeekSummary({

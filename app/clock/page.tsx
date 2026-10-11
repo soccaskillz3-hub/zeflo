@@ -374,7 +374,7 @@ export default function ClockPage({searchParams}: PageProps<"/clock">) {
                 className="group flex h-6 items-center"
               >
                 <span
-                  className={`block h-1.5 rounded-full transition-all duration-500 ${
+                  className={`block h-1.5 rounded-full transition-[width,background-color,box-shadow] duration-500 ease-out ${
                     i === index ? "w-6 bg-scene shadow-[0_0_8px_var(--accent-glow)]" : "w-1.5 bg-white/35 group-hover:bg-white/70"
                   }`}
                 />

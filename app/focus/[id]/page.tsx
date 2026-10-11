@@ -120,7 +120,7 @@ function BreakPicker({onStart, onCancel}: {onStart: (minutes: number) => void; o
             key={m}
             type="button"
             onClick={() => onStart(m)}
-            className="rounded-lg bg-white/[0.07] py-3 text-sm text-white transition hover:bg-white/[0.14] active:scale-[0.98]"
+            className="rounded-lg bg-white/[0.07] py-3 text-sm text-white transition hover:bg-white/[0.14] sf-press"
           >
             {m} min
           </button>
@@ -164,7 +164,7 @@ function BreakPicker({onStart, onCancel}: {onStart: (minutes: number) => void; o
 
 // A soft dark glass backing keeps the controls readable over anything behind them, snow included.
 const controlClass = (primary = false) =>
-  `min-w-28 bg-slate-950/35 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.25em] backdrop-blur-sm transition active:scale-[0.98] ${
+  `min-w-28 bg-slate-950/35 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.25em] backdrop-blur-sm transition sf-press ${
     primary
       ? "sf-focus-primary border"
       : "border border-white/30 text-white/85 hover:border-white/60 hover:text-white"

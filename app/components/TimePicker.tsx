@@ -140,9 +140,9 @@ export default function TimePicker({value, onChange, label, placeholder = "Pick 
               close();
             }
           }}
-          className={`sf-pop absolute z-30 w-56 ${openUp ? "bottom-full mb-2" : "top-full mt-2"} sf-panel rounded-xl border p-2 [text-shadow:none] ${
+          className={`sf-pop absolute z-30 w-56 ${openUp ? "bottom-full mb-2 [--pop-y:4px]" : "top-full mt-2"} sf-panel rounded-xl border p-2 [text-shadow:none] ${
             align === "right" ? "right-0" : "left-0"
-          }`}
+          } ${openUp ? (align === "right" ? "origin-bottom-right" : "origin-bottom-left") : align === "right" ? "origin-top-right" : "origin-top-left"}`}
         >
           <div className="flex gap-1">
             <Column

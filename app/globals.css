@@ -5,7 +5,18 @@
   --foreground: #e2e8f0;
 }
 
+/* Motion curves. The built-in easings are too soft; these give UI motion some intent: a strong
+   ease-out for things appearing and responding, and iOS's drawer curve for sheets. Tailwind's
+   ease-out / ease-in-out utilities use them too. */
+:root {
+  --sf-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --sf-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --sf-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 @theme inline {
+  --ease-out: var(--sf-ease-out);
+  --ease-in-out: var(--sf-ease-in-out);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -488,22 +499,48 @@ body {
   }
 }
 
+/* The phone's bottom sheet: up from below its own height, on the iOS drawer curve. */
 .sf-sheet {
-  animation: sf-sheet 180ms ease-out both;
+  animation: sf-sheet 320ms var(--sf-ease-drawer) both;
 }
 
 @keyframes sf-sheet {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: none; }
+  from { transform: translateY(calc(100% + 1rem)); }
+  to   { transform: none; }
 }
 
+/* Menus, pickers and dialogs appearing. Menus and pickers grow from the corner they hang from
+   (an origin-* class where they're used, and --pop-y: 4px for ones that open upwards); dialogs
+   stay centred. */
 .sf-pop {
-  animation: sf-pop 140ms ease-out both;
+  animation: sf-pop 180ms var(--sf-ease-out) both;
 }
 
 @keyframes sf-pop {
-  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  from { opacity: 0; transform: translateY(var(--pop-y, -4px)) scale(0.96); }
   to   { opacity: 1; transform: none; }
+}
+dialog.sf-pop::backdrop { animation: sf-fade-only 200ms ease both; }
+@keyframes sf-fade-only {
+  from { opacity: 0; }
+}
+
+/* Pressing anything pressable gives way a little, so the app feels like it heard you. In the
+   base layer, so a button's own transition or scale (Tailwind utilities) still wins. */
+@layer base {
+  :where(button:not(:disabled), .sf-press) {
+    transition-property: scale;
+    transition-duration: 160ms;
+    transition-timing-function: var(--sf-ease-out);
+  }
+  :where(button:not(:disabled), .sf-press):active { scale: 0.97; }
+}
+
+/* Less motion: the same things appear, but fade in place rather than move or grow. */
+@media (prefers-reduced-motion: reduce) {
+  .sf-pop,
+  .sf-sheet { animation-name: sf-fade-only; }
+  :where(button:not(:disabled), .sf-press):active { scale: none; }
 }
 
 /* ---------- Scene palette ----------
@@ -1591,6 +1628,28 @@ body {
   60%, 100% { transform: translateX(100%); }
 }
 
+/* Resting points: the page settles on the hero, on each chapter (placed by Story) and on the
+   closing section, gliding there when a scroll ends. A fast flick stops at the next chapter
+   rather than flying past it. The story's own top is one too: the timetable, before it drops
+   in. Only on this page (the :has), and measured from below the
+   status bar on iPhone. */
+html:has(.wl-story) {
+  scroll-snap-type: y mandatory;
+  scroll-padding-top: env(safe-area-inset-top);
+}
+.wl-hero,
+.wl-story,
+.wl-end { scroll-snap-align: start; }
+.wl-snap {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
 /* The story: a tall section, with the stage pinned while it scrolls past. */
 .wl-story { position: relative; height: 620svh; }
 .wl-stage {
@@ -1627,6 +1686,9 @@ body {
 .wl-chapter {
   grid-area: 1 / 1;
   opacity: var(--v);
+  /* A touch of blur while one chapter's words hand over to the next, so the crossfade reads as
+     one change rather than two blocks of text overlapping. */
+  filter: blur(calc((1 - var(--v)) * 4px));
   transform: translateY(calc((1 - var(--v)) * 18px));
 }
 .wl-versus span {
@@ -1891,6 +1953,33 @@ body {
   to { opacity: 1; transform: none; filter: none; }
 }
 
+.wl-sky-steps {
+  position: absolute;
+  bottom: 14%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+.wl-sky-steps span {
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.2);
+  overflow: hidden;
+}
+.wl-sky-steps span::after {
+  content: "";
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  transform: scaleX(0);
+}
+.wl-sky-steps span[data-state="seen"]::after { transform: none; }
+.wl-sky-steps span[data-state="now"]::after { animation: wl-sky-step 2.6s linear forwards; }
+@keyframes wl-sky-step { to { transform: none; } }
+
 /* 5: the progress card, arriving from in front. */
 .wl-proof {
   --t: clamp(0, calc(var(--c4) / 0.3), 1);
@@ -1975,4 +2064,5 @@ body {
   .wl-word,
   .wl-live-dot::after,
   .wl-cue-line::after { animation: none; }
+  .wl-sky-steps span[data-state="now"]::after { animation: none; transform: none; }
 }

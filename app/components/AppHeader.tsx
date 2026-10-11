@@ -41,7 +41,7 @@ function CalendarMenu({pathname}: {pathname: string}) {
         Calendar
         <svg
           viewBox="0 0 12 12"
-          className={`h-2.5 w-2.5 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-2.5 w-2.5 transition-transform duration-200 ease-out ${open ? "rotate-180" : ""}`}
           fill="none"
           stroke="currentColor"
           strokeWidth="1.6"
@@ -51,7 +51,7 @@ function CalendarMenu({pathname}: {pathname: string}) {
       </button>
 
       {open && (
-        <div className="sf-panel sf-pop absolute left-0 top-full z-40 mt-2 w-60 rounded-xl border p-1.5 [text-shadow:none]">
+        <div className="sf-panel sf-pop absolute left-0 top-full z-40 origin-top-left mt-2 w-60 rounded-xl border p-1.5 [text-shadow:none]">
           {CALENDAR_PAGES.map((page) => {
             const current = pathname === page.href;
             return (

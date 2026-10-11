@@ -129,8 +129,8 @@ export default function DatePicker({value, onChange, label, placeholder = "Pick 
           aria-label={label}
           onKeyDown={onKeyDown}
           className={`sf-pop sf-panel absolute z-30 w-[17.5rem] rounded-xl border p-3 [text-shadow:none] ${
-            openUp ? "bottom-full mb-2" : "top-full mt-2"
-          } ${align === "right" ? "right-0" : "left-0"}`}
+            openUp ? "bottom-full mb-2 [--pop-y:4px]" : "top-full mt-2"
+          } ${align === "right" ? "right-0" : "left-0"} ${openUp ? (align === "right" ? "origin-bottom-right" : "origin-bottom-left") : align === "right" ? "origin-top-right" : "origin-top-left"}`}
         >
           <div className="mb-2 flex items-center justify-between">
             <button type="button" onClick={() => setFocused(shiftMonth(focused, -1))} aria-label="Previous month" className={step}>

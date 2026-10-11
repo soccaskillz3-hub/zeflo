@@ -85,7 +85,7 @@ CPS 109 LAB Fri 8:00AM-9:50AM ENG LG14 2026-09-08 to 2026-12-08
 Here's my schedule:`;
 
 const button =
-  "border border-scene/70 px-5 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 active:scale-[0.98] disabled:opacity-50";
+  "border border-scene/70 px-5 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 sf-press disabled:opacity-50";
 const quiet = "text-xs uppercase tracking-[0.25em] text-white/60 transition hover:text-white";
 
 function formatDay(day: string) {
