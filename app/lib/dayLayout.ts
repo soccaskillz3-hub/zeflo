@@ -70,11 +70,17 @@ export function layoutBlocks(entries: Entry[]): Block[] {
 }
 
 // The hours a timeline should show: a normal waking day (8 AM to 10 PM), stretched to fit
-// everything in `spans` and the current time.
+// everything in `spans`, and the current time from 5 AM on (an early start, or studying late).
+// Not before then: opening the calendar at 1 AM shouldn't push the whole day below empty hours.
 export function hourRange(spans: {start?: string; end?: string}[], now: number | null) {
   const starts = spans.filter((s) => s.start).map((s) => toMinutes(s.start!));
   const ends = spans.filter((s) => s.end).map((s) => toMinutes(s.end!));
-  const first = Math.min(8, ...starts.map((m) => Math.floor(m / 60)), ...(now === null ? [] : [Math.floor(now / 60)]));
-  const last = Math.max(22, ...ends.map((m) => Math.ceil(m / 60)), ...(now === null ? [] : [Math.floor(now / 60) + 1]));
+  const nowHour = now === null || now < 5 * 60 ? null : Math.floor(now / 60);
+  const first = Math.min(8, ...starts.map((m) => Math.floor(m / 60)), ...(nowHour === null ? [] : [nowHour]));
+  const last = Math.max(22, ...ends.map((m) => Math.ceil(m / 60)), ...(nowHour === null ? [] : [nowHour + 1]));
   return {first, last};
 }
+
+// Whether a time (in minutes) falls on a timeline showing these hours.
+export const onTimeline = (minutes: number | null, range: {first: number; last: number}): minutes is number =>
+  minutes !== null && minutes >= range.first * 60 && minutes <= range.last * 60;

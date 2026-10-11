@@ -7,7 +7,7 @@ import SectionLabel from "../../components/SectionLabel";
 import SessionForm from "../../components/SessionForm";
 import TimePicker from "../../components/TimePicker";
 import {classesOn, useClasses} from "../../lib/classes";
-import {dayEntries, hourRange, layoutBlocks} from "../../lib/dayLayout";
+import {dayEntries, hourRange, layoutBlocks, onTimeline} from "../../lib/dayLayout";
 import {addDays, formatDay, isDayKey} from "../../lib/days";
 import {useSchedule} from "../../lib/schedule";
 import {formatHour, formatMinutes, formatTime, fromMinutes, nowMinutes, toMinutes} from "../../lib/time";
@@ -635,7 +635,7 @@ function DayView({day, isToday}: {day: string; isToday: boolean}) {
 
               {/* Current time. It runs behind the blocks (they sit above it), so it never
                   crosses a session's text or buttons. */}
-              {now !== null && (
+              {onTimeline(now, {first: firstHour, last: lastHour}) && (
                 <div
                   ref={nowLine}
                   className="pointer-events-none absolute inset-x-0 z-[1] -translate-y-1/2"

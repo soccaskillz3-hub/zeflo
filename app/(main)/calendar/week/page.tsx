@@ -6,7 +6,7 @@ import {use, useEffect, useRef, useState} from "react";
 import CalendarNav from "../../../components/CalendarNav";
 import SectionLabel from "../../../components/SectionLabel";
 import {classesOn, useClasses} from "../../../lib/classes";
-import {dayEntries, hourRange, layoutBlocks} from "../../../lib/dayLayout";
+import {dayEntries, hourRange, layoutBlocks, onTimeline} from "../../../lib/dayLayout";
 import {addDays, formatDay, isDayKey, weekDays, weekStart} from "../../../lib/days";
 import {useSchedule} from "../../../lib/schedule";
 import {formatHour, formatMinutes, formatShortTime, formatTime, nowMinutes, toMinutes} from "../../../lib/time";
@@ -236,7 +236,7 @@ function WeekView({start, today}: {start: string; today: string}) {
                     );
                   })}
 
-                  {isToday && now !== null && (
+                  {isToday && onTimeline(now, {first: firstHour, last: lastHour}) && (
                     <div
                       className="pointer-events-none absolute inset-x-0 z-[1] -translate-y-1/2"
                       style={{top: top(now)}}
