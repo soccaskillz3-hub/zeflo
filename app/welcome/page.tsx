@@ -1,22 +1,40 @@
+import type {CSSProperties} from "react";
 import Link from "next/link";
 import DevLogin from "../components/DevLogin";
 import AccountDeleted from "./AccountDeleted";
-import SectionLabel from "../components/SectionLabel";
+import LiveSky from "./LiveSky";
+import Story from "./Story";
 
 // The front door for people who aren't logged in. The proxy shows it at "/" (and sends
-// logged-in visitors straight to the dashboard instead).
+// logged-in visitors straight to the dashboard instead). The hero, then how Zeflo works as a
+// scroll story over the live scene (Story), then the way in.
 
-const FEATURES = [
-  {title: "Plan", text: "Paste your class schedule, then fit study sessions around it, day by day or week by week."},
-  {title: "Focus", text: "Press Start? for a full-screen study timer with breaks, or just a calm clock over the scene."},
-  {title: "Track", text: "Keep a streak going, and see your week, your courses and months of studying at a glance."},
-];
+const HEADLINE = "Plan your study day. Then actually do it.".split(" ");
+
+function SignUpLinks() {
+  return (
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+      <Link
+        href="/signup"
+        className="border border-scene/70 bg-slate-950/20 px-6 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 active:scale-[0.98]"
+      >
+        Create an account
+      </Link>
+      <Link
+        href="/login"
+        className="text-xs uppercase tracking-[0.25em] text-scene-soft underline decoration-scene/40 underline-offset-4 transition hover:text-scene-ink"
+      >
+        I already have one
+      </Link>
+    </div>
+  );
+}
 
 export default async function WelcomePage({searchParams}: PageProps<"/welcome">) {
   const {deleted} = await searchParams;
   return (
     <main className="sf-lift flex flex-1 flex-col font-mono text-white">
-      <div className="mx-auto w-full max-w-3xl px-5 pb-32 pt-10 sm:px-8 sm:pt-14">
+      <div className="wl-hero mx-auto flex w-full max-w-6xl flex-col px-5 pt-10 sm:px-10 sm:pt-12">
         <header className="flex items-center justify-between gap-4">
           <span className="text-sm font-semibold tracking-[0.4em]">ZEFLO</span>
           <Link href="/login" className="text-xs uppercase tracking-[0.3em] text-white/75 transition hover:text-white">
@@ -24,63 +42,61 @@ export default async function WelcomePage({searchParams}: PageProps<"/welcome">)
           </Link>
         </header>
 
-        <section className="mt-24 sm:mt-32">
+        <section className="mt-auto pb-10 pt-16 sm:pb-14">
           {deleted === "1" && <AccountDeleted />}
-          <h1 className="max-w-xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            Plan your study day. Then actually do it.
-          </h1>
-          <p className="mt-6 max-w-lg text-sm leading-relaxed text-white/80 sm:text-base">
-            A calm planner and focus timer that lives in a scene that follows your weather and time of day.
-          </p>
-          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-            <Link
-              href="/signup"
-              className="border border-scene/70 px-6 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 active:scale-[0.98]"
-            >
-              Create an account
-            </Link>
-            <Link
-              href="/login"
-              className="text-xs uppercase tracking-[0.25em] text-scene-soft underline decoration-scene/40 underline-offset-4 transition hover:text-scene-ink"
-            >
-              I already have one
-            </Link>
+          <div className="min-h-4">
+            <LiveSky />
           </div>
-          <DevLogin />
-        </section>
-
-        <section className="mt-24">
-          <SectionLabel>What you get</SectionLabel>
-          {/* What sets Zeflo apart, so it comes first. */}
-          <div className="mt-8 rounded-2xl border border-scene/30 bg-scene/[0.07] p-5 sm:p-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-scene-ink">✦ Your own AI, built in</p>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85">
-              Connect Claude or another assistant, and just ask it to plan your week. It works around your classes and tests, puts study sessions
-              straight on your calendar, and learns how you study the more you use it. ChatGPT is coming soon.
-            </p>
-          </div>
-          <ul className="mt-10 grid gap-8 sm:grid-cols-3">
-            {FEATURES.map((f) => (
-              <li key={f.title}>
-                <p className="text-xs uppercase tracking-[0.3em] text-scene-ink">{f.title}</p>
-                <p className="mt-3 text-sm leading-relaxed text-white/80">{f.text}</p>
-              </li>
+          <h1 className="wl-serif mt-6 max-w-4xl text-[clamp(2.9rem,8.4vw,7rem)] leading-[0.94]">
+            {HEADLINE.map((word, i) => (
+              <span key={i}>
+                <span className="wl-word" style={{"--i": i} as CSSProperties}>
+                  {word === "actually" ? <em>{word}</em> : word}
+                </span>{" "}
+              </span>
             ))}
-          </ul>
-          <p className="mt-12 text-xs text-white/60">Your schedule and progress are private to your account.</p>
-          <nav className="mt-4 flex gap-5 text-[11px] uppercase tracking-[0.25em] text-white/55">
-            <Link href="/privacy" className="transition hover:text-white">
-              Privacy
-            </Link>
-            <Link href="/terms" className="transition hover:text-white">
-              Terms
-            </Link>
-            <Link href="/support" className="transition hover:text-white">
-              Support
-            </Link>
-          </nav>
+          </h1>
+          <p className="mt-7 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base">
+            Zeflo turns your class schedule into a study plan, then gets you through it: a focus timer, a streak to keep, and a sky that
+            matches yours.
+          </p>
+          <div className="mt-9">
+            <SignUpLinks />
+          </div>
+          <p className="wl-cue mt-14 flex items-center gap-3 text-[10px] uppercase tracking-[0.35em] text-white/60" aria-hidden>
+            <span className="wl-cue-line" />
+            Scroll to see a week come together
+          </p>
         </section>
       </div>
+
+      <Story />
+
+      <section className="mx-auto w-full max-w-6xl px-5 pb-28 pt-24 sm:px-10 sm:pt-32">
+        <p className="text-[11px] uppercase tracking-[0.3em] text-scene-ink">About a minute, start to finish</p>
+        <h2 className="wl-serif mt-5 max-w-3xl text-[clamp(2.3rem,6vw,4.75rem)] leading-[0.98]">
+          One paste. One question. <em>Your week&apos;s planned.</em>
+        </h2>
+        <p className="mt-6 max-w-lg text-sm leading-relaxed text-white/80">
+          Paste your classes, ask your AI to plan around them, press Start. Imports from Waterloo, TMU and York, or any school&apos;s
+          calendar file. Your schedule and progress are private to your account.
+        </p>
+        <div className="mt-9">
+          <SignUpLinks />
+        </div>
+        <DevLogin />
+        <nav className="mt-20 flex gap-5 text-[11px] uppercase tracking-[0.25em] text-white/55">
+          <Link href="/privacy" className="transition hover:text-white">
+            Privacy
+          </Link>
+          <Link href="/terms" className="transition hover:text-white">
+            Terms
+          </Link>
+          <Link href="/support" className="transition hover:text-white">
+            Support
+          </Link>
+        </nav>
+      </section>
     </main>
   );
 }

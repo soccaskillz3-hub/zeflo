@@ -7,6 +7,8 @@ import {THEME_IDS, type Theme} from "./themes";
 import {fetchWeather, timeOfDay, TIMES, WEATHERS, type SunTimes, type TimeOfDay, type Weather} from "./weather";
 
 export type SceneStatus = "locating" | "live" | "denied" | "error";
+// A scene shown for a moment and not saved: the welcome page runs through a few skies.
+export type ScenePreview = {theme: Theme; time: TimeOfDay; weather: Weather};
 
 const THEME_KEY = "studyflow:theme";
 const WEATHER_OVERRIDE_KEY = "studyflow:weather-override";
@@ -20,11 +22,13 @@ type Scene = {
   live: Weather | null; // weather at the visitor's location, once known
   sun: SunTimes | null; // today's sunrise and sunset there, once known
   status: SceneStatus;
+  ready: boolean; // the client clock is known, so `time` is the visitor's, not a placeholder
   weatherOverride: Weather | null; // null = automatic
   timeOverride: TimeOfDay | null;
   chooseTheme: (theme: Theme) => void;
   chooseWeather: (weather: Weather | null) => void;
   chooseTime: (time: TimeOfDay | null) => void;
+  previewScene: (scene: ScenePreview | null) => void; // null goes back to the real scene
 };
 
 const SceneContext = createContext<Scene | null>(null);
@@ -62,6 +66,7 @@ export function SceneProvider({children}: {children: ReactNode}) {
   // Null until mounted: the server can't know the visitor's local time, so the scene
   // stays hidden until the client picks the right sky, then fades in.
   const [now, setNow] = useState<Date | null>(null);
+  const [preview, setPreview] = useState<ScenePreview | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- read the client clock and saved settings once mounted
@@ -115,23 +120,25 @@ export function SceneProvider({children}: {children: ReactNode}) {
     };
   }, []);
 
-  const weather = weatherOverride ?? live?.weather ?? rememberedWeather ?? "clear";
-  const time = timeOverride ?? (now ? timeOfDay(now, live?.sun) : "night");
+  const shownTheme = preview?.theme ?? theme;
+  const weather = preview?.weather ?? weatherOverride ?? live?.weather ?? rememberedWeather ?? "clear";
+  const time = preview?.time ?? timeOverride ?? (now ? timeOfDay(now, live?.sun) : "night");
 
   // Expose the scene on <html> so CSS can theme panels and menus to match the sky, and remember
   // it so the next page load can paint it from the start (see sceneScript.ts). Not before the
   // client clock is known: until then this would be a guess, over the one the head script made.
   useEffect(() => {
     if (!now) return;
-    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.theme = shownTheme;
     document.documentElement.dataset.weather = weather;
     document.documentElement.dataset.time = time;
+    if (preview) return; // only a preview: the next load should still paint the real scene
     try {
       localStorage.setItem(SCENE_KEY, JSON.stringify({theme, time, weather, at: Date.now()}));
     } catch {
       // Not remembered; the next load works the scene out from the clock instead.
     }
-  }, [now, theme, weather, time]);
+  }, [now, shownTheme, weather, time, preview, theme]);
 
   const chooseTheme = (t: Theme) => {
     setTheme(t);
@@ -155,14 +162,16 @@ export function SceneProvider({children}: {children: ReactNode}) {
         live: live?.weather ?? null,
         sun: live?.sun ?? null,
         status,
+        ready: now !== null,
         weatherOverride,
         timeOverride,
         chooseTheme,
         chooseWeather,
         chooseTime,
+        previewScene: setPreview,
       }}
     >
-      <Backdrop theme={theme} weather={weather} time={time} visible={now !== null} />
+      <Backdrop theme={shownTheme} weather={weather} time={time} visible={now !== null} />
       {children}
     </SceneContext>
   );
