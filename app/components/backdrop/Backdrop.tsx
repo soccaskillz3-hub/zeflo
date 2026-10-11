@@ -83,6 +83,7 @@ export default function Backdrop({theme, weather, time, visible}: Props) {
       <WeatherLayers weather={weather} gradual={settled} />
       <div className="sf-grain absolute inset-0" />
       <div className="sf-vignette absolute inset-0" />
+      <div className="sf-edge-fade absolute inset-x-0 top-0" />
     </div>
   );
 }

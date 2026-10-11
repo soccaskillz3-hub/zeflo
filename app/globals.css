@@ -107,8 +107,39 @@
   color: color-mix(in srgb, var(--class-ink) 70%, transparent);
 }
 
+/* The scene's top edge, by theme and time of day: the top of the sky by the ocean, the canopy in
+   the forest. Safari on iPhone fills the strip behind the status bar with the page's background,
+   so the body uses it (and fades it into the scene, .sf-edge-fade), and the strip flows into
+   the scene instead of sitting on it as a flat bar. Weather dims or greys it a little. */
+:root { --edge: #02040b; }
+:root[data-time="sunrise"] { --edge: #1c2748; }
+:root[data-time="day"] { --edge: #1d4a78; }
+:root[data-time="dusk"] { --edge: #070b16; }
+:root[data-theme="forest"][data-time="sunrise"] { --edge: #1a1726; }
+:root[data-theme="forest"][data-time="day"] { --edge: #0f2219; }
+:root[data-theme="forest"][data-time="dusk"] { --edge: #100c19; }
+:root[data-theme="forest"][data-time="night"] { --edge: #04070e; }
+:root { --edge-shown: var(--edge); }
+:root[data-weather="cloudy"],
+:root[data-weather="fog"],
+:root[data-weather="snow"] { --edge-shown: color-mix(in srgb, var(--edge) 80%, #6b7482); }
+:root[data-weather="rain"],
+:root[data-weather="storm"] { --edge-shown: color-mix(in srgb, var(--edge) 65%, #0b0f17); }
+
+/* Just below the status bar strip: solid edge colour under any part of the page that's behind
+   the bar, then a short fade into the scene, so no seam shows where the strip ends (by the moon's
+   glow, say). Only on phones and tablets, the screens with that strip. */
+.sf-edge-fade {
+  height: 0;
+  background: linear-gradient(to bottom, var(--edge-shown) 0, var(--edge-shown) env(safe-area-inset-top), transparent 100%);
+}
+@media (hover: none) and (pointer: coarse) {
+  .sf-edge-fade { height: calc(env(safe-area-inset-top) + 32px); }
+}
+
 body {
-  background: var(--background);
+  background: var(--edge-shown, var(--background));
+  transition: background-color 1.8s ease;
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   /* The page draws under the status bar and Safari's toolbar (viewport-fit=cover, in the root
