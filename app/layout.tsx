@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono, Jost } from "next/font/google";
 import "./globals.css";
+import GlassLight from "./components/GlassLight";
 import { AccountProvider } from "./lib/account";
 import { ClassesProvider } from "./lib/classes";
 import { PrefsProvider } from "./lib/prefs";
@@ -66,6 +67,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <AccountProvider account={user}>
           <SceneProvider>
+            <GlassLight />
             <SoundProvider>
               {user && <SettingsSync key={`settings-${user.id}`} userId={user.id} />}
               {/* Keyed by account, so nothing from one login carries over to the next. */}

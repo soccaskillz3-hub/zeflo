@@ -16,7 +16,7 @@ export default async function LoginPage({searchParams}: PageProps<"/login">) {
   const {next, error} = await searchParams;
   return (
     <>
-      <h1 className="text-3xl font-semibold tracking-tight">Welcome back</h1>
+      <h1 className="sf-serif text-balance text-4xl leading-tight">Welcome back</h1>
       <p className="mt-3 text-sm text-white/75">Log in to your study day.</p>
       <div className="mt-10">
         <LoginForm

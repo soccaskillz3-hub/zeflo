@@ -14,7 +14,7 @@ export default async function ResetPasswordPage() {
   const fromResetLink = (await cookies()).has(RESET_PENDING_COOKIE);
   return (
     <>
-      <h1 className="text-3xl font-semibold tracking-tight">Choose a new password</h1>
+      <h1 className="sf-serif text-balance text-4xl leading-tight">Choose a new password</h1>
       <p className="mt-3 text-sm text-white/75">For {user.email}.</p>
       <div className="mt-10">
         <ResetPasswordForm />

@@ -2,7 +2,7 @@
 
 import {use, useRef} from "react";
 import CalendarNav from "../../components/CalendarNav";
-import SectionLabel from "../../components/SectionLabel";
+import {Card, CardHead} from "../../components/Card";
 import Flame from "../../components/Flame";
 import StudyHeatmap from "../../components/StudyHeatmap";
 import WeekBars from "../../components/WeekBars";
@@ -23,30 +23,30 @@ export default function ProgressPage({searchParams}: PageProps<"/progress">) {
   const start = weekStart(isDayKey(requested) ? requested : today);
 
   return (
-    <>
+    <div className="mt-6 grid gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-5">
       {error ? (
-        <p className="mt-12 text-sm text-white/75">
-          Couldn&apos;t load your study history. Check your connection and reload the page.
-        </p>
+        <Card className="sm:col-span-2">
+          <p className="text-sm text-white/75">Couldn&apos;t load your study history. Check your connection and reload the page.</p>
+        </Card>
       ) : history ? (
         <>
-          <StreakSection history={history} today={today} />
-          <section className="mt-16">
-            <SectionLabel>Last six months</SectionLabel>
-            <div className="mt-6">
+          <StreakCards history={history} today={today} />
+          <Card className="sm:col-span-2">
+            <CardHead label="Last six months" />
+            <div className="mt-5">
               <StudyHeatmap history={history} today={today} />
             </div>
-          </section>
+          </Card>
         </>
       ) : (
-        <div className="mt-12 h-72" aria-busy />
+        <div className="h-72 sm:col-span-2" aria-busy />
       )}
-      <WeekSection start={start} today={today} />
-    </>
+      <WeekCard start={start} today={today} />
+    </div>
   );
 }
 
-function StreakSection({history, today}: {history: History; today: string}) {
+function StreakCards({history, today}: {history: History; today: string}) {
   const {current, best, studiedToday} = streaks(history, today);
   const month = daysBetween(addDays(today, -29), today).map((d) => totalOn(history, d));
   const monthDays = month.filter((t) => t.done > 0).length;
@@ -61,49 +61,58 @@ function StreakSection({history, today}: {history: History; today: string}) {
         : "Finish a session today to start one";
 
   return (
-    <section className="mt-12">
-      <SectionLabel>Streak</SectionLabel>
-      <div className="mt-6 flex flex-wrap items-end gap-x-5 gap-y-2">
-        {current ? (
-          <>
-            <p className="flex items-center gap-3 text-6xl font-semibold leading-none tracking-tight tabular-nums sm:text-7xl">
-              <Flame lit={studiedToday} className="h-10 w-10 sm:h-12 sm:w-12" />
-              {current}
+    <>
+      <Card>
+        <CardHead label="Streak" />
+        <div className="mt-5 flex flex-wrap items-end gap-x-4 gap-y-2">
+          {current ? (
+            <>
+              <p className="flex items-center gap-3">
+                <Flame lit={studiedToday} className="h-10 w-10 sm:h-12 sm:w-12" />
+                <span className="sf-serif text-7xl leading-none tabular-nums">{current}</span>
+              </p>
+              <p className="pb-1.5 text-sm text-scene-soft tabular-nums">
+                {current === 1 ? "day" : "days"} in a row · best {best}
+              </p>
+            </>
+          ) : (
+            // No streak running: words rather than a big zero.
+            <p className="flex items-center gap-3">
+              <Flame lit={false} className="h-9 w-9" />
+              <span className="sf-serif text-4xl leading-none">{best ? "Start a new streak" : "No streak yet"}</span>
+              {best > 0 && <span className="self-end pb-1 text-sm text-scene-soft">best {best}</span>}
             </p>
-            <p className="pb-1.5 text-sm text-scene-soft tabular-nums">
-              {current === 1 ? "day" : "days"} in a row · best {best}
-            </p>
-          </>
-        ) : (
-          // No streak running: words rather than a big zero.
-          <p className="flex items-center gap-3 font-display text-4xl leading-none sm:text-5xl">
-            <Flame lit={false} className="h-8 w-8 sm:h-10 sm:w-10" />
-            {best ? "Start a new streak" : "No streak yet"}
-            {best > 0 && <span className="self-end pb-1 font-mono text-sm text-scene-soft">best {best}</span>}
-          </p>
-        )}
-      </div>
-      <p className="mt-4 text-[11px] uppercase tracking-[0.3em] text-scene-soft">{nudge}</p>
-      <p className="mt-6 text-sm text-white/75 tabular-nums">
-        Last 30 days: studied on {monthDays} {monthDays === 1 ? "day" : "days"}
-        {monthMinutes > 0 && `, ${formatMinutes(monthMinutes)} in all`}
-      </p>
-    </section>
+          )}
+        </div>
+        <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/55">{nudge}</p>
+      </Card>
+
+      <Card>
+        <CardHead label="Last 30 days" />
+        <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <p className="sf-serif text-7xl leading-none tabular-nums">{monthDays}</p>
+          <p className="text-sm text-scene-soft">{monthDays === 1 ? "day" : "days"} studied</p>
+        </div>
+        <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/55">
+          {monthMinutes > 0 ? `${formatMinutes(monthMinutes)} in all` : "Nothing yet this month"}
+        </p>
+      </Card>
+    </>
   );
 }
 
-function WeekSection({start, today}: {start: string; today: string}) {
+function WeekCard({start, today}: {start: string; today: string}) {
   const {totals, loaded, planned, done, studiedDays, subjects} = useWeek(start);
   const swipeArea = useRef<HTMLElement>(null);
   const thisWeek = start === weekStart(today);
   const subjectScale = Math.max(...subjects.map((t) => t.planned), 1);
 
   return (
-    <section ref={swipeArea} className="mt-16">
+    <section ref={swipeArea} className="sf-card sf-in min-w-0 p-5 sm:col-span-2 sm:p-6">
       <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <SectionLabel>{thisWeek ? "This week" : `Week of ${formatDay(start, {month: "short", day: "numeric"})}`}</SectionLabel>
-        </div>
+        <h2 className="text-[11px] uppercase tracking-[0.3em] text-white/60">
+          {thisWeek ? "This week" : `Week of ${formatDay(start, {month: "short", day: "numeric"})}`}
+        </h2>
         <CalendarNav
           prev={`/progress?week=${addDays(start, -7)}`}
           next={`/progress?week=${addDays(start, 7)}`}
@@ -116,8 +125,8 @@ function WeekSection({start, today}: {start: string; today: string}) {
         />
       </div>
 
-      <div className="mt-5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <p className="text-3xl font-semibold tracking-tight tabular-nums">{loaded ? formatMinutes(done) : " "}</p>
+      <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <p className="sf-serif text-6xl leading-none tabular-nums">{loaded ? formatMinutes(done) : " "}</p>
         <p className="text-sm text-scene-soft tabular-nums">
           {loaded &&
             (planned
@@ -131,8 +140,8 @@ function WeekSection({start, today}: {start: string; today: string}) {
       </div>
 
       {subjects.length > 0 && (
-        <div className="mt-10">
-          <h3 className="text-[11px] uppercase tracking-[0.3em] text-white/70">By subject</h3>
+        <div className="mt-8 border-t border-white/10 pt-6">
+          <h3 className="text-[11px] uppercase tracking-[0.3em] text-white/60">By subject</h3>
           <ul className="mt-5 space-y-5">
             {subjects.map((t) => (
               <li key={t.subject}>

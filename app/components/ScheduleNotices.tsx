@@ -21,9 +21,9 @@ export default function ScheduleNotices() {
   };
 
   return (
-    <div className="mt-8 space-y-3">
+    <div className="mt-6 space-y-3 sm:mt-8">
       {error && (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-l-2 border-rose-300/80 py-1 pl-4">
+        <div role="alert" className="sf-card flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-rose-300/40 px-5 py-4">
           <p className="text-sm text-rose-200">{error}</p>
           <button type="button" onClick={dismissError} className={`${button} text-white/60 hover:text-white`}>
             Dismiss
@@ -31,7 +31,7 @@ export default function ScheduleNotices() {
         </div>
       )}
       {legacy && (
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-l-2 border-scene py-1 pl-4">
+        <div className="sf-card flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-4">
           <p className="text-sm text-white/85">
             This browser has {count} {count === 1 ? "session" : "sessions"} saved from before accounts. Add{" "}
             {count === 1 ? "it" : "them"} to today?
@@ -44,7 +44,7 @@ export default function ScheduleNotices() {
               type="button"
               onClick={runImport}
               disabled={importing}
-              className={`${button} border border-scene/70 px-4 py-1.5 font-semibold text-scene-ink hover:bg-scene/15 disabled:opacity-60`}
+              className="sf-primary px-5 py-2 text-[11px] uppercase tracking-[0.2em] disabled:opacity-60"
             >
               {importing ? "Adding…" : "Add to today"}
             </button>

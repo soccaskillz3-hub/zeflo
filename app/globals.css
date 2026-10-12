@@ -268,13 +268,22 @@ body {
 :root[data-weather="snow"]   { --panel-wash: rgba(200, 215, 235, 0.1); --panel-edge: rgba(225, 235, 250, 0.42); }
 :root[data-weather="fog"]    { --panel-wash: rgba(170, 178, 190, 0.16); --panel-edge: rgba(210, 215, 225, 0.3); }
 
+/* Menus, pickers and dialogs: the same liquid glass as the cards (rim from .sf-card::before), but
+   denser, since they float over content as well as the sky. */
 .sf-panel {
-  background-color: var(--panel);
-  background-image: linear-gradient(var(--panel-wash), var(--panel-wash)),
-    radial-gradient(120% 80% at 50% 0%, var(--panel-glow), transparent 70%);
-  border-color: var(--panel-edge);
-  box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(14px) saturate(140%);
+  isolation: isolate;
+  background-color: color-mix(in srgb, var(--panel) 66%, transparent);
+  background-image:
+    linear-gradient(180deg, rgb(255 255 255 / 0.08), transparent 40%),
+    linear-gradient(var(--panel-wash), var(--panel-wash));
+  border-color: rgb(255 255 255 / 0.08);
+  box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  backdrop-filter: blur(28px) saturate(170%);
+}
+/* The rim needs the panel as its frame (dialogs are already positioned, by the browser). */
+@layer base {
+  .sf-panel:not(dialog) { position: relative; }
 }
 
 /* The selected item inside a themed panel. */
@@ -1553,24 +1562,163 @@ dialog.sf-pop::backdrop { animation: sf-fade-only 200ms ease both; }
   }
 }
 
-/* ---------- Welcome page ----------
-   The front door (app/welcome): a soft serif for the big lines against the app's mono, and the
-   scroll story (Story.tsx), a model planner in CSS 3D. Story sets these on the stage each frame:
-   --p, progress through the whole story (0 to 1); --c0…--c4, each chapter's own progress, eased;
-   and --v0…--v4, how visible each chapter's words are. Everything below runs off them. --motion
-   is 0 for people who ask for less motion: the model stays flat and things fade in place. */
+/* ---------- App surfaces (1.4) ----------
+   The look shared by the app and the welcome page. Type: a soft serif (Fraunces) for big numbers
+   and headings, set against the mono for everything else. Content sits on cards: near-solid,
+   tinted by the scene (time of day, weather) so they belong to the sky, and always readable over
+   it. On phones they skip the backdrop blur, which is costly over a scene that's always moving. */
 
-.wl-serif {
+.sf-serif {
   font-family: var(--font-fraunces), Georgia, serif;
   font-weight: 380;
   letter-spacing: -0.025em;
   font-variation-settings: "SOFT" 60, "WONK" 0, "opsz" 144;
 }
-.wl-serif em {
+.sf-serif em {
   font-style: italic;
   color: var(--accent-ink);
   font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144;
 }
+
+/* Liquid glass: clear enough that the scene is the backdrop, not hidden behind it. The sky shows
+   through lightly blurred and a shade dimmer, so text on it stays readable on a bright day. The rim (::before) catches light from the top left, a specular line
+   runs along the top edge, and on desktop a soft light follows the pointer (::after, from
+   GlassLight). The pseudo-elements sit behind the content (z-index -1 in the card's own layer). */
+.sf-card {
+  position: relative;
+  isolation: isolate;
+  border-radius: 1.5rem;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.035), transparent 45%),
+    color-mix(in srgb, var(--panel) 7%, transparent);
+  -webkit-backdrop-filter: blur(4px) saturate(135%) brightness(0.94);
+  backdrop-filter: blur(4px) saturate(135%) brightness(0.94);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    inset 0 -1px 0 rgb(255 255 255 / 0.03),
+    0 20px 50px -24px rgb(0 0 0 / 0.45);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 0 12px rgb(0 0 0 / 0.18);
+}
+.sf-card::before,
+.sf-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(140deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.05) 28%, rgb(255 255 255 / 0.02) 62%, rgb(255 255 255 / 0.12));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.sf-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(520px circle at var(--gx, 50%) var(--gy, 0%), rgb(255 255 255 / 0.05), transparent 45%);
+  opacity: var(--glow, 0);
+  transition: opacity 400ms ease;
+}
+/* Phones blur a little less: the scene behind is always moving, and blur costs more the wider it is. */
+@media (hover: none) {
+  .sf-card {
+    -webkit-backdrop-filter: blur(3px) saturate(130%) brightness(0.94);
+    backdrop-filter: blur(3px) saturate(130%) brightness(0.94);
+  }
+}
+
+/* Cards arriving with a page: a short rise, each a beat after the one before. Quick, since the
+   app's pages are opened many times a day. Less motion: a plain fade. */
+/* backwards, not both: once it's in, the animation lets go of transform, so a swipe (which moves
+   the card with an inline transform) isn't overridden by it. */
+.sf-in { animation: sf-in 380ms var(--sf-ease-out) backwards; }
+.sf-in:nth-child(2) { animation-delay: 40ms; }
+.sf-in:nth-child(3) { animation-delay: 80ms; }
+.sf-in:nth-child(4) { animation-delay: 120ms; }
+.sf-in:nth-child(5) { animation-delay: 160ms; }
+.sf-in:nth-child(n + 6) { animation-delay: 200ms; }
+@keyframes sf-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-in { animation-name: sf-fade-only; }
+}
+
+/* The one solid button per screen (Start, Add): filled with the scene's accent. */
+.sf-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background: var(--accent);
+  color: rgb(6 10 20);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, white), 0 8px 24px -10px var(--accent-glow);
+  text-shadow: none;
+  transition: scale 160ms var(--sf-ease-out), filter 150ms ease, box-shadow 150ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sf-primary:hover { filter: brightness(1.08); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, white), 0 10px 28px -8px var(--accent-glow); }
+}
+
+/* Navigation: a lens of brighter glass that slides to the current section. It moves like liquid:
+   the edge in front leads and the one behind catches up (--pl and --pr, the pill's left and right
+   edges, animate at different speeds, swapped by data-dir), so it stretches, then settles. The
+   nav sets the edges from the current link's position. */
+@property --pl { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --pr { syntax: "<length>"; inherits: false; initial-value: 0px; }
+.sf-nav-pill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--pl);
+  width: calc(var(--pr) - var(--pl));
+  border-radius: 9999px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.05)),
+    color-mix(in srgb, var(--accent) 16%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.4),
+    inset 0 0 0 1px rgb(255 255 255 / 0.12),
+    0 6px 16px -8px rgb(0 0 0 / 0.5);
+  transition: --pl 460ms var(--sf-ease-out), --pr 280ms var(--sf-ease-out), opacity 200ms ease;
+}
+.sf-nav-pill[data-dir="left"] { transition: --pl 280ms var(--sf-ease-out), --pr 460ms var(--sf-ease-out), opacity 200ms ease; }
+.sf-nav-pill[data-instant] { transition: none; }
+.sf-tabbar {
+  position: fixed;
+  inset-inline: 0.75rem;
+  bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  z-index: 50;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-nav-pill { transition-duration: 0ms; }
+}
+
+/* A session ticked off: its check draws itself in. */
+.sf-check-draw {
+  stroke-dasharray: 12;
+  stroke-dashoffset: 12;
+  animation: sf-check-draw 280ms var(--sf-ease-out) 40ms forwards;
+}
+@keyframes sf-check-draw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .sf-check-draw { animation: none; stroke-dashoffset: 0; }
+}
+
+/* ---------- Welcome page ----------
+   The front door (app/welcome): the serif (.sf-serif) for the big lines against the mono, and the
+   scroll story (Story.tsx), a model planner in CSS 3D. Story sets these on the stage each frame:
+   --p, progress through the whole story (0 to 1); --c0…--c4, each chapter's own progress, eased;
+   and --v0…--v4, how visible each chapter's words are. Everything below runs off them. --motion
+   is 0 for people who ask for less motion: the model stays flat and things fade in place. */
+
 
 /* The headline arriving: word by word, rising out of a soft blur. */
 .wl-word {

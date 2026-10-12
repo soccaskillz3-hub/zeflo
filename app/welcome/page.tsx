@@ -47,7 +47,7 @@ export default async function WelcomePage({searchParams}: PageProps<"/welcome">)
           <div className="min-h-4">
             <LiveSky />
           </div>
-          <h1 className="wl-serif mt-6 max-w-4xl text-balance text-[clamp(2.9rem,8.4vw,7rem)] leading-[0.94]">
+          <h1 className="sf-serif mt-6 max-w-4xl text-balance text-[clamp(2.9rem,8.4vw,7rem)] leading-[0.94]">
             {HEADLINE.map((word, i) => (
               <span key={i}>
                 <span className="wl-word" style={{"--i": i} as CSSProperties}>
@@ -74,7 +74,7 @@ export default async function WelcomePage({searchParams}: PageProps<"/welcome">)
 
       <section className="wl-end mx-auto w-full max-w-6xl px-5 pb-28 pt-24 sm:px-10 sm:pt-32">
         <p className="text-[11px] uppercase tracking-[0.3em] text-scene-ink">About a minute, start to finish</p>
-        <h2 className="wl-serif mt-5 max-w-3xl text-balance text-[clamp(2.3rem,6vw,4.75rem)] leading-[0.98]">
+        <h2 className="sf-serif mt-5 max-w-3xl text-balance text-[clamp(2.3rem,6vw,4.75rem)] leading-[0.98]">
           One paste. One question. <em>Your week&apos;s planned.</em>
         </h2>
         <p className="mt-6 max-w-lg text-pretty text-sm leading-relaxed text-white/80">

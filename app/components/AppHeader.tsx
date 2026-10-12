@@ -2,78 +2,121 @@
 
 import Link from "next/link";
 import {usePathname} from "next/navigation";
-import {useCallback, useRef, useState} from "react";
+import type {ReactNode} from "react";
 import MuteButton from "./MuteButton";
 import SettingsMenu from "./SettingsMenu";
 import {formatDay} from "../lib/days";
 import {useSchedule} from "../lib/schedule";
-import {useDismiss} from "../lib/useDismiss";
+import {useSlidingPill} from "../lib/useSlidingPill";
 
-// The week view needs seven columns, so phones (narrower than Tailwind's sm) don't get it.
-const CALENDAR_PAGES = [
-  {href: "/calendar/week", label: "Week view", hint: "The whole week at a glance", wideOnly: true},
-  {href: "/calendar", label: "Day view", hint: "One day, hour by hour"},
-  {href: "/calendar/schedule", label: "Schedule", hint: "List and add today's sessions"},
+// The app's sections. Wide screens open the calendar on the week; phones (in the tab bar) on the
+// day, since the week needs seven columns. The calendar pages switch between views themselves.
+type Section = {label: string; href: string; phoneHref?: string; icon: ReactNode; current: (path: string) => boolean};
+
+const stroke = {fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round"} as const;
+
+const SECTIONS: Section[] = [
+  {
+    label: "Today",
+    href: "/",
+    current: (p) => p === "/",
+    icon: (
+      <svg viewBox="0 0 20 20" className="h-5 w-5" {...stroke}>
+        <circle cx="10" cy="10" r="3.4" />
+        <path d="M10 2.5v1.6M10 15.9v1.6M2.5 10h1.6M15.9 10h1.6M4.7 4.7l1.1 1.1M14.2 14.2l1.1 1.1M4.7 15.3l1.1-1.1M14.2 5.8l1.1-1.1" />
+      </svg>
+    ),
+  },
+  {
+    label: "Calendar",
+    href: "/calendar/week",
+    phoneHref: "/calendar",
+    current: (p) => p.startsWith("/calendar"),
+    icon: (
+      <svg viewBox="0 0 20 20" className="h-5 w-5" {...stroke}>
+        <rect x="3" y="4.2" width="14" height="12.8" rx="2.4" />
+        <path d="M3 8.2h14M7 2.8v2.6M13 2.8v2.6" />
+        <path d="M6.6 11.4h2.2M11.2 11.4h2.2M6.6 14h2.2" />
+      </svg>
+    ),
+  },
+  {
+    label: "Progress",
+    href: "/progress",
+    current: (p) => p === "/progress",
+    icon: (
+      <svg viewBox="0 0 20 20" className="h-5 w-5" {...stroke}>
+        <path d="M3.5 16.5h13" />
+        <rect x="4.6" y="10.5" width="2.6" height="6" rx="0.8" />
+        <rect x="8.7" y="6.5" width="2.6" height="10" rx="0.8" />
+        <rect x="12.8" y="3.5" width="2.6" height="13" rx="0.8" />
+      </svg>
+    ),
+  },
+  {
+    label: "Classes",
+    href: "/classes",
+    current: (p) => p === "/classes",
+    icon: (
+      <svg viewBox="0 0 20 20" className="h-5 w-5" {...stroke}>
+        <path d="M10 5.2C8.4 4 6 3.5 3.5 3.8v11.4c2.5-.3 4.9.2 6.5 1.4 1.6-1.2 4-1.7 6.5-1.4V3.8C14 3.5 11.6 4 10 5.2Z" />
+        <path d="M10 5.2v11.4" />
+      </svg>
+    ),
+  },
 ];
 
-const tabClass = (active: boolean) =>
-  `-mb-px flex items-center gap-2 border-b-2 pb-3 text-[11px] uppercase tracking-[0.2em] transition sm:text-xs sm:tracking-[0.3em] ${
-    active ? "border-scene text-scene-ink" : "border-transparent text-white/60 hover:text-white"
-  }`;
-
-// "Calendar" opens a menu of the calendar pages instead of navigating straight away.
-function CalendarMenu({pathname}: {pathname: string}) {
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const active = pathname.startsWith("/calendar");
-  const close = useCallback(() => setOpen(false), []);
-  useDismiss(root, open, close);
-
+function SectionLinks({path}: {path: string}) {
+  const {list, pill} = useSlidingPill(path);
   return (
-    <div ref={root} className="relative">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="true"
-        onClick={() => setOpen((o) => !o)}
-        className={tabClass(active)}
-      >
-        Calendar
-        <svg
-          viewBox="0 0 12 12"
-          className={`h-2.5 w-2.5 transition-transform duration-200 ease-out ${open ? "rotate-180" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-        >
-          <path d="M2.5 4.5L6 8l3.5-3.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+    <nav aria-label="Sections" className="max-sm:hidden">
+      <div ref={list} className="sf-card relative flex rounded-full p-1">
+        <span ref={pill} className="sf-nav-pill" aria-hidden style={{top: 4, bottom: 4}} />
+        {SECTIONS.map((s) => {
+          const current = s.current(path);
+          return (
+            <Link
+              key={s.label}
+              href={s.href}
+              aria-current={current ? "page" : undefined}
+              className={`relative rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.22em] transition-colors lg:px-5 ${
+                current ? "text-scene-ink" : "text-white/65 hover:text-white"
+              }`}
+            >
+              {s.label}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
 
-      {open && (
-        <div className="sf-panel sf-pop absolute left-0 top-full z-40 origin-top-left mt-2 w-60 rounded-xl border p-1.5 [text-shadow:none]">
-          {CALENDAR_PAGES.map((page) => {
-            const current = pathname === page.href;
-            return (
-              <Link
-                key={page.href}
-                href={page.href}
-                onClick={() => setOpen(false)}
-                aria-current={current ? "page" : undefined}
-                className={`block rounded-lg px-3 py-2.5 transition ${
-                  current ? "sf-panel-active" : "hover:bg-white/[0.08]"
-                } ${page.wideOnly ? "max-sm:hidden" : ""}`}
-              >
-                <span className="block text-xs uppercase tracking-[0.25em] text-white">
-                  {page.label}
-                </span>
-                <span className="mt-1 block text-xs text-white/60">{page.hint}</span>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-    </div>
+// Phones: the sections as a bar at the bottom of the screen, in reach of a thumb.
+function TabBar({path}: {path: string}) {
+  const {list, pill} = useSlidingPill(path);
+  return (
+    <nav aria-label="Sections" className="sf-tabbar sm:hidden">
+      <div ref={list} className="sf-card relative mx-auto grid max-w-md grid-cols-4 rounded-[1.4rem] p-1.5">
+        <span ref={pill} className="sf-nav-pill rounded-2xl" aria-hidden style={{top: 6, bottom: 6, borderRadius: "1rem"}} />
+        {SECTIONS.map((s) => {
+          const current = s.current(path);
+          return (
+            <Link
+              key={s.label}
+              href={s.phoneHref ?? s.href}
+              aria-current={current ? "page" : undefined}
+              className={`relative flex flex-col items-center gap-1 rounded-2xl py-2 transition-colors ${
+                current ? "text-scene-ink" : "text-white/60"
+              }`}
+            >
+              {s.icon}
+              <span className="text-[9px] uppercase tracking-[0.18em]">{s.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
@@ -83,7 +126,7 @@ export default function AppHeader() {
   // tomorrow (or still yesterday). It also turns over at midnight while the page is open.
   const {today: day} = useSchedule();
   const today = day ? formatDay(day, {weekday: "long", month: "short", day: "numeric"}) : "";
-  // Phones don't have room for the full weekday next to the settings button.
+  // Phones don't have room for the full weekday next to the buttons.
   const todayShort = day ? formatDay(day, {weekday: "short", month: "short", day: "numeric"}) : "";
 
   return (
@@ -92,11 +135,13 @@ export default function AppHeader() {
         <Link href="/" className="text-sm font-semibold tracking-[0.3em] text-white sm:tracking-[0.4em]">
           ZEFLO
         </Link>
+        <SectionLinks path={pathname} />
         <div className="flex items-center gap-4 sm:gap-5">
-          {/* The narrowest phones don't have room for the date next to the buttons. */}
-          <p className="whitespace-nowrap text-[11px] uppercase tracking-[0.2em] text-white/75 max-[359px]:hidden sm:tracking-[0.3em]">
-            <span className="hidden sm:inline">{today}</span>
-            <span className="sm:hidden">{todayShort}</span>
+          {/* The date: short on phones, full on wide screens, and left out where the section links
+              need the room (and on the narrowest phones). */}
+          <p className="whitespace-nowrap text-[11px] uppercase tracking-[0.2em] text-white/75 max-[359px]:hidden sm:max-lg:hidden lg:tracking-[0.3em]">
+            <span className="hidden lg:inline">{today}</span>
+            <span className="lg:hidden">{todayShort}</span>
           </p>
           <Link
             href="/clock"
@@ -113,20 +158,7 @@ export default function AppHeader() {
           <SettingsMenu />
         </div>
       </header>
-
-      <nav aria-label="Sections" className="mt-8 flex gap-5 border-b border-white/15 sm:gap-8">
-        <Link href="/" aria-current={pathname === "/" ? "page" : undefined} className={tabClass(pathname === "/")}>
-          Dashboard
-        </Link>
-        <CalendarMenu pathname={pathname} />
-        <Link
-          href="/progress"
-          aria-current={pathname === "/progress" ? "page" : undefined}
-          className={tabClass(pathname === "/progress")}
-        >
-          Progress
-        </Link>
-      </nav>
+      <TabBar path={pathname} />
     </>
   );
 }

@@ -116,7 +116,7 @@ export default function SessionForm({
             )}
             <button
               type="submit"
-              className="border border-scene/70 px-5 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 sf-press"
+              className="sf-primary px-5 py-2 text-[11px] uppercase tracking-[0.2em]"
             >
               Add
             </button>

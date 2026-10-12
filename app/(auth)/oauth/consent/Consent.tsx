@@ -59,7 +59,7 @@ export default function Consent({authorizationId}: {authorizationId: string | nu
   if (state.step === "error") {
     return (
       <>
-        <h1 className="text-3xl font-semibold tracking-tight">Can&apos;t connect</h1>
+        <h1 className="sf-serif text-balance text-4xl leading-tight">Can&apos;t connect</h1>
         <p className="mt-3 text-sm text-white/75">{state.message}</p>
         <p className="mt-10 text-sm">
           <Link href="/" className={authLink}>
@@ -78,7 +78,7 @@ export default function Consent({authorizationId}: {authorizationId: string | nu
 
   return (
     <>
-      <h1 className="text-3xl font-semibold tracking-tight">Connect {client.name || "this app"}?</h1>
+      <h1 className="sf-serif text-balance text-4xl leading-tight">Connect {client.name || "this app"}?</h1>
       <p className="mt-3 text-sm leading-relaxed text-white/75">
         <span className="text-white">{client.name || "An app"}</span> wants to use your Zeflo account
         {user?.email ? (

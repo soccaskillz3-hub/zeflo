@@ -3,7 +3,8 @@
 import {use, useCallback, useEffect, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent} from "react";
 import CalendarNav from "../../components/CalendarNav";
 import StartButton from "../../components/StartButton";
-import SectionLabel from "../../components/SectionLabel";
+import {Card, CardHead} from "../../components/Card";
+import CalendarViews from "../../components/CalendarViews";
 import SessionForm from "../../components/SessionForm";
 import TimePicker from "../../components/TimePicker";
 import {classesOn, useClasses} from "../../lib/classes";
@@ -331,11 +332,9 @@ function DayView({day, isToday}: {day: string; isToday: boolean}) {
   }
 
   return (
-    <section ref={swipeArea} className="mt-12">
+    <section className="mx-auto mt-6 max-w-3xl sm:mt-10">
       <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <SectionLabel>{isToday ? "Today" : formatDay(day, {weekday: "long"})}</SectionLabel>
-        </div>
+        <CalendarViews />
         <CalendarNav
           prev={`/calendar?day=${addDays(day, -1)}`}
           next={`/calendar?day=${addDays(day, 1)}`}
@@ -347,311 +346,316 @@ function DayView({day, isToday}: {day: string; isToday: boolean}) {
           swipeArea={swipeArea}
         />
       </div>
-      <div className="mt-5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <p className="text-3xl font-semibold tracking-tight tabular-nums">
-          {!isToday
-            ? formatDay(day, {month: "long", day: "numeric", year: "numeric"})
-            : now === null
-              ? " "
-              : formatTime(fromMinutes(now))}
-        </p>
-        <p className="text-sm text-scene-soft">{status}</p>
-      </div>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-        <p className="text-sm text-white/60">
+
+      {/* Only the card follows a swipe; the view switcher and arrows above it stay put. */}
+      <Card ref={swipeArea} className="mt-4 sm:p-7">
+        <CardHead label={isToday ? "Today" : formatDay(day, {weekday: "long"})} />
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+          <div className="min-w-0">
+            <p className="sf-serif text-5xl leading-none tabular-nums sm:text-6xl">
+              {!isToday
+                ? formatDay(day, {month: "long", day: "numeric"})
+                : now === null
+                  ? " "
+                  : formatTime(fromMinutes(now))}
+            </p>
+            <p className="mt-2.5 text-sm text-scene-soft">{status}</p>
+          </div>
+          <button
+            type="button"
+            // The next free slot from now, or 9 AM on another day or in the small hours (as the
+            // timeline itself skips them; see hourRange).
+            onClick={() => openComposer(now === null || now < 5 * 60 ? 9 * 60 : Math.ceil((now + 1) / SNAP) * SNAP)}
+            className="sf-primary px-5 py-2.5 text-[11px] uppercase tracking-[0.2em]"
+          >
+            + Add
+          </button>
+        </div>
+        <p className="mt-3 text-xs text-white/50">
           {loaded && entries.length === 0 ? "Your day is open. " : ""}Pick an open time to add a session.
         </p>
-        <button
-          type="button"
-          // The next free slot from now, or 9 AM on another day or in the small hours (as the
-          // timeline itself skips them; see hourRange).
-          onClick={() => openComposer(now === null || now < 5 * 60 ? 9 * 60 : Math.ceil((now + 1) / SNAP) * SNAP)}
-          className="border border-scene/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 sf-press"
-        >
-          + Add
-        </button>
-      </div>
 
-      <div ref={scroller} className="sf-day-scroll mt-4 sm:mt-8">
-        <div className="py-8 sm:py-0">
-          <div className="relative flex" style={{height: hours.length * HOUR_PX}}>
-            {/* Hour labels */}
-            <div className="relative w-14 shrink-0 sm:w-16">
-              {[...hours, lastHour].map((h) => {
-                const isNow = now !== null && Math.floor(now / 60) === h;
-                return (
-                  <span
-                    key={h}
-                    className={`absolute -translate-y-1/2 text-[11px] tabular-nums ${isNow ? "text-scene-soft" : "text-white/55"}`}
-                    style={{top: top(h * 60)}}
-                  >
-                    {formatHour(h)}
-                  </span>
-                );
-              })}
-            </div>
+        <div ref={scroller} className="sf-day-scroll mt-5 sm:mt-6">
+          <div className="py-8 sm:py-0">
+            <div className="relative flex" style={{height: hours.length * HOUR_PX}}>
+              {/* Hour labels */}
+              <div className="relative w-14 shrink-0 sm:w-16">
+                {[...hours, lastHour].map((h) => {
+                  const isNow = now !== null && Math.floor(now / 60) === h;
+                  return (
+                    <span
+                      key={h}
+                      className={`absolute -translate-y-1/2 text-[11px] tabular-nums ${isNow ? "text-scene-soft" : "text-white/55"}`}
+                      style={{top: top(h * 60)}}
+                    >
+                      {formatHour(h)}
+                    </span>
+                  );
+                })}
+              </div>
 
-            {/* Grid, sessions and classes */}
-            <div
-              ref={grid}
-              className="relative flex-1 cursor-pointer select-none"
-              onPointerDown={(e) => {
-                // With a mouse or pen, press and drag to draw the session. Touch screens scroll the
-                // day instead, so there a tap opens the panel (see onClick) and the block's handles
-                // adjust it.
-                if (e.button !== 0 || e.pointerType === "touch") return;
-                if ((e.target as HTMLElement).closest("[data-block], [data-composer]")) return;
-                e.currentTarget.setPointerCapture(e.pointerId);
-                drag.current = {mode: "create", anchor: minutesAt(e.clientY), moved: false};
-                setHover(null);
-              }}
-              onPointerMove={(e) => {
-                const d = drag.current;
-                if (d?.mode === "create") {
-                  const at = minutesAt(e.clientY);
-                  if (at !== d.anchor) d.moved = true;
-                  if (d.moved) {
-                    setCreating(true);
-                    createFrom(d.anchor, at);
+              {/* Grid, sessions and classes */}
+              <div
+                ref={grid}
+                className="relative flex-1 cursor-pointer select-none"
+                onPointerDown={(e) => {
+                  // With a mouse or pen, press and drag to draw the session. Touch screens scroll the
+                  // day instead, so there a tap opens the panel (see onClick) and the block's handles
+                  // adjust it.
+                  if (e.button !== 0 || e.pointerType === "touch") return;
+                  if ((e.target as HTMLElement).closest("[data-block], [data-composer]")) return;
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  drag.current = {mode: "create", anchor: minutesAt(e.clientY), moved: false};
+                  setHover(null);
+                }}
+                onPointerMove={(e) => {
+                  const d = drag.current;
+                  if (d?.mode === "create") {
+                    const at = minutesAt(e.clientY);
+                    if (at !== d.anchor) d.moved = true;
+                    if (d.moved) {
+                      setCreating(true);
+                      createFrom(d.anchor, at);
+                    }
+                    return;
                   }
-                  return;
-                }
-                if (e.pointerType !== "mouse" || (e.target as HTMLElement).closest("[data-block], [data-composer]")) return setHover(null);
-                setHover(minutesAt(e.clientY));
-              }}
-              onPointerUp={() => {
-                const d = drag.current;
-                if (d?.mode !== "create") return;
-                drag.current = null;
-                skipClick.current = true;
-                if (d.moved) {
-                  setCreating(false);
-                  setComposerKey((k) => k + 1);
-                } else {
-                  openComposer(d.anchor);
-                }
-              }}
-              onClick={(e) => {
-                if (skipClick.current) {
-                  skipClick.current = false;
-                  return;
-                }
-                if ((e.target as HTMLElement).closest("[data-block], [data-composer]")) return;
-                openComposer(minutesAt(e.clientY));
-              }}
-              onPointerLeave={() => setHover(null)}
-            >
-              {hours.map((h) => {
-                const isNow = now !== null && Math.floor(now / 60) === h;
-                return (
-                  <div
-                    key={h}
-                    className={`absolute inset-x-0 border-t border-white/15 ${isNow ? "bg-white/[0.04]" : ""}`}
-                    style={{top: top(h * 60), height: HOUR_PX}}
-                  >
-                    <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/[0.07]" />
-                  </div>
-                );
-              })}
-              <div className="absolute inset-x-0 border-t border-white/15" style={{top: top(lastHour * 60)}} />
-
-              {/* Where a click would add a session */}
-              {hover !== null && !draft && (
-                <div
-                  className="pointer-events-none absolute inset-x-1 flex items-center rounded-md border border-dashed border-scene/50 bg-scene/[0.06] px-2.5 text-[11px] text-scene-soft/90 tabular-nums"
-                  style={{top: top(hover) + 1, height: 2 * SNAP * PX_PER_MIN - 2}}
-                  aria-hidden
-                >
-                  + {formatTime(fromMinutes(hover))}
-                </div>
-              )}
-
-              {blocks.map(({entry, start, end, lane, lanes}) => {
-                const isCurrent = now !== null && start <= now && now < end;
-                const isPast = now !== null && end <= now;
-                const height = Math.max((end - start) * PX_PER_MIN, 22);
-                const compact = height < 44;
-                const place = {
-                  top: top(start) + 1,
-                  height: height - 2,
-                  left: `calc(${(lane / lanes) * 100}% + 4px)`,
-                  width: `calc(${100 / lanes}% - 6px)`,
-                };
-
-                if (entry.kind === "class") {
-                  const {meeting} = entry;
+                  if (e.pointerType !== "mouse" || (e.target as HTMLElement).closest("[data-block], [data-composer]")) return setHover(null);
+                  setHover(minutesAt(e.clientY));
+                }}
+                onPointerUp={() => {
+                  const d = drag.current;
+                  if (d?.mode !== "create") return;
+                  drag.current = null;
+                  skipClick.current = true;
+                  if (d.moved) {
+                    setCreating(false);
+                    setComposerKey((k) => k + 1);
+                  } else {
+                    openComposer(d.anchor);
+                  }
+                }}
+                onClick={(e) => {
+                  if (skipClick.current) {
+                    skipClick.current = false;
+                    return;
+                  }
+                  if ((e.target as HTMLElement).closest("[data-block], [data-composer]")) return;
+                  openComposer(minutesAt(e.clientY));
+                }}
+                onPointerLeave={() => setHover(null)}
+              >
+                {hours.map((h) => {
+                  const isNow = now !== null && Math.floor(now / 60) === h;
                   return (
                     <div
-                      key={entry.id}
+                      key={h}
+                      className={`absolute inset-x-0 border-t border-white/15 ${isNow ? "bg-white/[0.04]" : ""}`}
+                      style={{top: top(h * 60), height: HOUR_PX}}
+                    >
+                      <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/[0.07]" />
+                    </div>
+                  );
+                })}
+                <div className="absolute inset-x-0 border-t border-white/15" style={{top: top(lastHour * 60)}} />
+
+                {/* Where a click would add a session */}
+                {hover !== null && !draft && (
+                  <div
+                    className="pointer-events-none absolute inset-x-1 flex items-center rounded-md border border-dashed border-scene/50 bg-scene/[0.06] px-2.5 text-[11px] text-scene-soft/90 tabular-nums"
+                    style={{top: top(hover) + 1, height: 2 * SNAP * PX_PER_MIN - 2}}
+                    aria-hidden
+                  >
+                    + {formatTime(fromMinutes(hover))}
+                  </div>
+                )}
+
+                {blocks.map(({entry, start, end, lane, lanes}) => {
+                  const isCurrent = now !== null && start <= now && now < end;
+                  const isPast = now !== null && end <= now;
+                  const height = Math.max((end - start) * PX_PER_MIN, 22);
+                  const compact = height < 44;
+                  const place = {
+                    top: top(start) + 1,
+                    height: height - 2,
+                    left: `calc(${(lane / lanes) * 100}% + 4px)`,
+                    width: `calc(${100 / lanes}% - 6px)`,
+                  };
+
+                  if (entry.kind === "class") {
+                    const {meeting} = entry;
+                    return (
+                      <div
+                        key={entry.id}
+                        data-block
+                        data-state={isCurrent ? "current" : isPast ? "past" : undefined}
+                        title={meeting.title || undefined}
+                        className={`sf-class-block absolute z-[2] flex cursor-default overflow-hidden rounded-md border border-l-4 px-2.5 backdrop-blur-sm ${
+                          compact ? "items-center gap-2 py-0.5" : "flex-col py-1.5"
+                        }`}
+                        style={place}
+                      >
+                        <span className="block truncate text-sm font-semibold">
+                          {entry.label}
+                          <span className="ml-2 text-[10px] font-normal uppercase tracking-[0.2em] opacity-70">Class</span>
+                        </span>
+                        <span className="block truncate text-[11px] tabular-nums opacity-80">
+                          {formatTime(meeting.start)} – {formatTime(meeting.end)}
+                          {meeting.location && ` · ${meeting.location}`}
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  const {session} = entry;
+                  const done = completed.includes(session.id);
+                  // The focus timer runs today's sessions.
+                  const canStart = isToday && !done && !session.isBreak;
+                  return (
+                    <div
+                      key={session.id}
                       data-block
-                      data-state={isCurrent ? "current" : isPast ? "past" : undefined}
-                      title={meeting.title || undefined}
-                      className={`sf-class-block absolute z-[2] flex cursor-default overflow-hidden rounded-md border border-l-4 px-2.5 backdrop-blur-sm ${
-                        compact ? "items-center gap-2 py-0.5" : "flex-col py-1.5"
+                      className={`group absolute z-[2] overflow-hidden rounded-md border backdrop-blur-sm transition hover:brightness-125 ${
+                        done
+                          ? "border-scene/40 bg-scene/15"
+                          : session.isBreak
+                            ? "border-dashed border-white/35 bg-white/[0.04]"
+                            : isCurrent
+                              ? "sf-block-current border-scene shadow-[0_0_18px_var(--accent-glow)]"
+                              : isPast
+                                ? "border-white/20 bg-white/[0.05]"
+                                : "border-white/35 bg-slate-900/40"
                       }`}
                       style={place}
                     >
-                      <span className="block truncate text-sm font-semibold">
-                        {entry.label}
-                        <span className="ml-2 text-[10px] font-normal uppercase tracking-[0.2em] opacity-70">Class</span>
-                      </span>
-                      <span className="block truncate text-[11px] tabular-nums opacity-80">
-                        {formatTime(meeting.start)} – {formatTime(meeting.end)}
-                        {meeting.location && ` · ${meeting.location}`}
-                      </span>
+                      {/* The part of the current session already gone, as a soft fill rather than
+                          the now line cutting through the block and its Start button. */}
+                      {isCurrent && (
+                        <span
+                          className="sf-block-elapsed pointer-events-none absolute inset-x-0 top-0"
+                          style={{height: Math.min((now - start) * PX_PER_MIN, height)}}
+                          aria-hidden
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => toggle(session.id)}
+                        aria-pressed={done}
+                        aria-label={`${session.subject}, ${formatTime(session.start)} to ${formatTime(session.end)}${done ? ", done" : ""}`}
+                        className={`relative flex h-full w-full min-w-0 px-2.5 text-left ${
+                          compact ? "items-center gap-2 py-0.5" : "flex-col py-1.5"
+                        } ${canStart ? "pr-[6.5rem]" : "pr-9"}`}
+                      >
+                        <span
+                          className={`block truncate text-sm ${
+                            done ? "text-white/55 line-through" : session.isBreak || isPast ? "text-white/65" : "text-white"
+                          }`}
+                        >
+                          {session.subject}
+                        </span>
+                        <span
+                          className={`block truncate text-[11px] tabular-nums ${done || isPast ? "text-white/45" : "text-scene-soft/90"}`}
+                        >
+                          {formatTime(session.start)} – {formatTime(session.end)}
+                        </span>
+                      </button>
+                      {/* Remove: shown on hover with a mouse, always on touch screens (no hover there). */}
+                      <button
+                        type="button"
+                        onClick={() => removeSession(session.id)}
+                        aria-label={`Remove ${session.subject}`}
+                        title="Remove"
+                        className={`absolute right-1 flex h-6 w-6 items-center justify-center rounded text-base leading-none text-white/50 transition hover:bg-white/10 hover:text-rose-300 focus-visible:opacity-100 opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100 ${
+                          compact ? "top-1/2 -translate-y-1/2" : "top-1"
+                        }`}
+                      >
+                        ×
+                      </button>
+                      {canStart && (
+                        <StartButton
+                          session={session}
+                          className={`absolute right-8 rounded border border-scene/60 bg-slate-950/75 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-scene-ink transition hover:bg-scene/20 ${
+                            compact ? "top-1/2 -translate-y-1/2" : "top-1.5"
+                          }`}
+                        />
+                      )}
                     </div>
                   );
-                }
+                })}
 
-                const {session} = entry;
-                const done = completed.includes(session.id);
-                // The focus timer runs today's sessions.
-                const canStart = isToday && !done && !session.isBreak;
-                return (
+                {/* The session being added. Drag its body to move it, or its top and bottom edges to
+                    change when it starts and ends. */}
+                {draftValid && (
                   <div
-                    key={session.id}
-                    data-block
-                    className={`group absolute z-[2] overflow-hidden rounded-md border backdrop-blur-sm transition hover:brightness-125 ${
-                      done
-                        ? "border-scene/40 bg-scene/15"
-                        : session.isBreak
-                          ? "border-dashed border-white/35 bg-white/[0.04]"
-                          : isCurrent
-                            ? "sf-block-current border-scene shadow-[0_0_18px_var(--accent-glow)]"
-                            : isPast
-                              ? "border-white/20 bg-white/[0.05]"
-                              : "border-white/35 bg-slate-900/40"
-                    }`}
-                    style={place}
+                    ref={ghost}
+                    data-composer
+                    data-drag="move"
+                    onPointerDown={creating ? undefined : grab}
+                    onPointerMove={pull}
+                    onPointerUp={letGo}
+                    onPointerCancel={letGo}
+                    className={`absolute inset-x-1 z-[5] touch-none rounded-md border-2 border-dashed border-scene bg-scene/10 px-2.5 py-1 shadow-[0_0_18px_var(--accent-glow)] ${
+                      creating ? "pointer-events-none" : "cursor-grab active:cursor-grabbing"
+                    } ${editing ? "" : "overflow-hidden"}`}
+                    style={{top: top(draftStart) + 1, height: Math.max((draftEnd - draftStart) * PX_PER_MIN, 22) - 2}}
                   >
-                    {/* The part of the current session already gone, as a soft fill rather than
-                        the now line cutting through the block and its Start button. */}
-                    {isCurrent && (
-                      <span
-                        className="sf-block-elapsed pointer-events-none absolute inset-x-0 top-0"
-                        style={{height: Math.min((now - start) * PX_PER_MIN, height)}}
-                        aria-hidden
+                    {editing ? (
+                      <BlockComposer
+                        key={composerKey}
+                        day={day}
+                        start={draft!.start}
+                        end={draft!.end}
+                        overlaps={overlaps.map((e) => e.label)}
+                        oneLine={draftEnd - draftStart < 45}
+                        onTimesChange={updateDraft}
+                        onClose={closeComposer}
                       />
+                    ) : (
+                      <div aria-hidden>
+                        <span className="block truncate text-sm text-scene-ink">New session</span>
+                        <span className="block truncate text-[11px] text-scene-soft/90 tabular-nums">
+                          {formatTime(draft!.start)} – {formatTime(draft!.end)} · {formatMinutes(draftEnd - draftStart)}
+                        </span>
+                      </div>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => toggle(session.id)}
-                      aria-pressed={done}
-                      aria-label={`${session.subject}, ${formatTime(session.start)} to ${formatTime(session.end)}${done ? ", done" : ""}`}
-                      className={`relative flex h-full w-full min-w-0 px-2.5 text-left ${
-                        compact ? "items-center gap-2 py-0.5" : "flex-col py-1.5"
-                      } ${canStart ? "pr-[6.5rem]" : "pr-9"}`}
-                    >
-                      <span
-                        className={`block truncate text-sm ${
-                          done ? "text-white/55 line-through" : session.isBreak || isPast ? "text-white/65" : "text-white"
-                        }`}
-                      >
-                        {session.subject}
-                      </span>
-                      <span
-                        className={`block truncate text-[11px] tabular-nums ${done || isPast ? "text-white/45" : "text-scene-soft/90"}`}
-                      >
-                        {formatTime(session.start)} – {formatTime(session.end)}
-                      </span>
-                    </button>
-                    {/* Remove: shown on hover with a mouse, always on touch screens (no hover there). */}
-                    <button
-                      type="button"
-                      onClick={() => removeSession(session.id)}
-                      aria-label={`Remove ${session.subject}`}
-                      title="Remove"
-                      className={`absolute right-1 flex h-6 w-6 items-center justify-center rounded text-base leading-none text-white/50 transition hover:bg-white/10 hover:text-rose-300 focus-visible:opacity-100 opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100 ${
-                        compact ? "top-1/2 -translate-y-1/2" : "top-1"
-                      }`}
-                    >
-                      ×
-                    </button>
-                    {canStart && (
-                      <StartButton
-                        session={session}
-                        className={`absolute right-8 rounded border border-scene/60 bg-slate-950/75 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-scene-ink transition hover:bg-scene/20 ${
-                          compact ? "top-1/2 -translate-y-1/2" : "top-1.5"
-                        }`}
-                      />
-                    )}
+                    {!creating &&
+                      (["start", "end"] as const).map((edge) => (
+                        <span
+                          key={edge}
+                          data-drag={edge}
+                          onPointerDown={grab}
+                          onPointerMove={pull}
+                          onPointerUp={letGo}
+                          onPointerCancel={letGo}
+                          aria-hidden
+                          // Just the grip while editing, so the edge doesn't cover the name box.
+                          className={`absolute flex h-3 cursor-ns-resize touch-none justify-center ${
+                            editing ? "left-1/2 w-14 -translate-x-1/2" : "inset-x-0"
+                          } ${edge === "start" ? "-top-0.5 items-start" : "-bottom-0.5 items-end"}`}
+                        >
+                          <span className="my-0.5 h-1 w-8 rounded-full bg-scene/80 shadow-[0_0_6px_var(--accent-glow)]" />
+                        </span>
+                      ))}
                   </div>
-                );
-              })}
+                )}
 
-              {/* The session being added. Drag its body to move it, or its top and bottom edges to
-                  change when it starts and ends. */}
-              {draftValid && (
-                <div
-                  ref={ghost}
-                  data-composer
-                  data-drag="move"
-                  onPointerDown={creating ? undefined : grab}
-                  onPointerMove={pull}
-                  onPointerUp={letGo}
-                  onPointerCancel={letGo}
-                  className={`absolute inset-x-1 z-[5] touch-none rounded-md border-2 border-dashed border-scene bg-scene/10 px-2.5 py-1 shadow-[0_0_18px_var(--accent-glow)] ${
-                    creating ? "pointer-events-none" : "cursor-grab active:cursor-grabbing"
-                  } ${editing ? "" : "overflow-hidden"}`}
-                  style={{top: top(draftStart) + 1, height: Math.max((draftEnd - draftStart) * PX_PER_MIN, 22) - 2}}
-                >
-                  {editing ? (
-                    <BlockComposer
-                      key={composerKey}
-                      day={day}
-                      start={draft!.start}
-                      end={draft!.end}
-                      overlaps={overlaps.map((e) => e.label)}
-                      oneLine={draftEnd - draftStart < 45}
-                      onTimesChange={updateDraft}
-                      onClose={closeComposer}
-                    />
-                  ) : (
-                    <div aria-hidden>
-                      <span className="block truncate text-sm text-scene-ink">New session</span>
-                      <span className="block truncate text-[11px] text-scene-soft/90 tabular-nums">
-                        {formatTime(draft!.start)} – {formatTime(draft!.end)} · {formatMinutes(draftEnd - draftStart)}
-                      </span>
-                    </div>
-                  )}
-                  {!creating &&
-                    (["start", "end"] as const).map((edge) => (
-                      <span
-                        key={edge}
-                        data-drag={edge}
-                        onPointerDown={grab}
-                        onPointerMove={pull}
-                        onPointerUp={letGo}
-                        onPointerCancel={letGo}
-                        aria-hidden
-                        // Just the grip while editing, so the edge doesn't cover the name box.
-                        className={`absolute flex h-3 cursor-ns-resize touch-none justify-center ${
-                          editing ? "left-1/2 w-14 -translate-x-1/2" : "inset-x-0"
-                        } ${edge === "start" ? "-top-0.5 items-start" : "-bottom-0.5 items-end"}`}
-                      >
-                        <span className="my-0.5 h-1 w-8 rounded-full bg-scene/80 shadow-[0_0_6px_var(--accent-glow)]" />
-                      </span>
-                    ))}
-                </div>
-              )}
-
-              {/* Current time. It runs behind the blocks (they sit above it), so it never
-                  crosses a session's text or buttons. */}
-              {onTimeline(now, {first: firstHour, last: lastHour}) && (
-                <div
-                  ref={nowLine}
-                  className="pointer-events-none absolute inset-x-0 z-[1] -translate-y-1/2"
-                  style={{top: top(now)}}
-                  aria-hidden
-                >
-                  <div className="h-[2px] bg-scene shadow-[0_0_10px_var(--accent-glow)]" />
-                  <div className="absolute -left-1 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-scene-soft shadow-[0_0_10px_var(--accent-glow)]" />
-                </div>
-              )}
+                {/* Current time. It runs behind the blocks (they sit above it), so it never
+                    crosses a session's text or buttons. */}
+                {onTimeline(now, {first: firstHour, last: lastHour}) && (
+                  <div
+                    ref={nowLine}
+                    className="pointer-events-none absolute inset-x-0 z-[1] -translate-y-1/2"
+                    style={{top: top(now)}}
+                    aria-hidden
+                  >
+                    <div className="h-[2px] bg-scene shadow-[0_0_10px_var(--accent-glow)]" />
+                    <div className="absolute -left-1 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-scene-soft shadow-[0_0_10px_var(--accent-glow)]" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Phones: the add panel is a sheet along the bottom, clear of the keyboard and the
           day's own scrolling. */}

@@ -249,7 +249,7 @@ export default function Story() {
                 <span className="mx-2 text-white/30">/</span>
                 {c.kicker}
               </p>
-              <h2 className="wl-serif mt-4 text-balance text-[clamp(1.85rem,4.2vw,3.4rem)] leading-[1.02]">{c.title}</h2>
+              <h2 className="sf-serif mt-4 text-balance text-[clamp(1.85rem,4.2vw,3.4rem)] leading-[1.02]">{c.title}</h2>
               <p className="mt-5 max-w-md text-pretty text-sm leading-relaxed text-white/80 sm:text-[15px]">{c.body}</p>
               <p className="wl-versus mt-5 max-w-md text-xs leading-relaxed text-white/55">
                 <span>Most planners:</span> {c.versus}
@@ -370,7 +370,7 @@ export default function Story() {
               <span className="block font-mono text-[11px] uppercase tracking-[0.3em] text-white/70 tabular-nums">
                 {shownSky.clock} · {shownSky.theme}
               </span>
-              <span className="wl-serif mt-3 block text-[clamp(2.4rem,6vw,4.75rem)] italic leading-none">{shownSky.label}</span>
+              <span className="sf-serif mt-3 block text-[clamp(2.4rem,6vw,4.75rem)] italic leading-none">{shownSky.label}</span>
             </p>
             {/* Which sky of the five, filling as each one plays. */}
             <div className="wl-sky-steps">

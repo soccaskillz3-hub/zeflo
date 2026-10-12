@@ -1,23 +1,27 @@
-import SectionLabel from "../../../components/SectionLabel";
+import {Card, CardHead} from "../../../components/Card";
+import CalendarViews from "../../../components/CalendarViews";
 import SessionForm from "../../../components/SessionForm";
 import SessionList from "../../../components/SessionList";
 
+// Today's sessions as a list: add one with the form, tick them off, or remove them.
 export default function SchedulePage() {
   return (
-    <>
-      <section className="mt-12">
-        <SectionLabel>Add to schedule</SectionLabel>
-        <div className="mt-6">
+    <div className="mx-auto mt-6 max-w-3xl sm:mt-10">
+      <CalendarViews />
+
+      <Card className="mt-4 sm:p-7">
+        <CardHead label="Add to today" />
+        <div className="mt-5">
           <SessionForm />
         </div>
-      </section>
+      </Card>
 
-      <section className="mt-16">
-        <SectionLabel>Today&apos;s schedule</SectionLabel>
-        <div className="mt-6">
+      <Card className="mt-4 sm:p-7">
+        <CardHead label="Today's schedule" />
+        <div className="mt-3">
           <SessionList removable empty="Your schedule is empty. Add your first session above." />
         </div>
-      </section>
-    </>
+      </Card>
+    </div>
   );
 }

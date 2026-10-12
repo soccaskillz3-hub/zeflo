@@ -30,7 +30,7 @@ export function Field({
         required
         autoComplete={autoComplete}
         autoFocus={autoFocus}
-        className="mt-2 w-full border-b border-white/30 bg-transparent px-1 py-2 text-white outline-none transition placeholder:text-white/45 focus:border-scene [color-scheme:dark]"
+        className="mt-2 w-full rounded-xl border border-white/15 bg-black/25 px-3.5 py-2.5 text-white outline-none transition placeholder:text-white/40 focus:border-scene/70 [color-scheme:dark]"
       />
       {hint && <span className="mt-1.5 block text-xs text-white/55">{hint}</span>}
     </label>
@@ -43,7 +43,7 @@ export function SubmitButton({children, pendingText}: {children: ReactNode; pend
     <button
       type="submit"
       disabled={pending}
-      className="w-full border border-scene/70 px-5 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 sf-press disabled:cursor-wait disabled:opacity-60"
+      className="sf-primary w-full px-5 py-3 text-[11px] uppercase tracking-[0.2em] disabled:cursor-wait disabled:opacity-60"
     >
       {pending ? pendingText : children}
     </button>
@@ -63,7 +63,7 @@ export function FormError({children}: {children?: ReactNode}) {
 export function EmailSent({title, children}: {title: string; children: ReactNode}) {
   return (
     <div role="status">
-      <p className="text-2xl font-semibold tracking-tight">{title}</p>
+      <p className="sf-serif text-balance text-3xl leading-tight">{title}</p>
       <p className="mt-4 text-sm leading-relaxed text-white/80">{children}</p>
     </div>
   );

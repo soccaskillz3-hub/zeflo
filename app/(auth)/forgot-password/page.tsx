@@ -8,7 +8,7 @@ export const metadata: Metadata = {title: "Reset your password · Zeflo"};
 export default function ForgotPasswordPage() {
   return (
     <>
-      <h1 className="text-3xl font-semibold tracking-tight">Forgot your password?</h1>
+      <h1 className="sf-serif text-balance text-4xl leading-tight">Forgot your password?</h1>
       <p className="mt-3 text-sm text-white/75">Enter your email and we&apos;ll send you a link to choose a new one.</p>
       <div className="mt-10">
         <ForgotPasswordForm />

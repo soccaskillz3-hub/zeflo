@@ -9,26 +9,24 @@ export default function SessionList({empty, removable = false}: {empty: ReactNod
   const {sessions, completed, loaded, toggle, removeSession} = useSchedule();
 
   return (
-    <ul>
-      {loaded && sessions.length === 0 && (
-        <li className="border-y border-white/15 py-8 text-center text-sm text-white/60">{empty}</li>
-      )}
+    <ul className="-mx-2 divide-y divide-white/10">
+      {loaded && sessions.length === 0 && <li className="py-8 text-center text-sm text-white/60">{empty}</li>}
 
       {sessions.map((session) => {
         const done = completed.includes(session.id);
         return (
           <li
             key={session.id}
-            className="group flex items-stretch border-b border-white/15 transition-colors first:border-t hover:bg-white/[0.04]"
+            className="group flex items-stretch rounded-xl transition-colors hover:bg-white/[0.04]"
           >
             <button
               type="button"
               onClick={() => toggle(session.id)}
               aria-pressed={done}
-              className="flex min-w-0 flex-1 items-center gap-4 py-4 pl-2 text-left sm:gap-6"
+              className="flex min-w-0 flex-1 items-center gap-4 py-3.5 pl-2 text-left sm:gap-5"
             >
               <span
-                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition ${
+                className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border transition ${
                   done
                     ? "border-scene bg-scene text-slate-900"
                     : session.isBreak
@@ -38,12 +36,12 @@ export default function SessionList({empty, removable = false}: {empty: ReactNod
               >
                 {done && (
                   <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2.2">
-                    <path d="M2.5 6.5l2.2 2.2 4.8-5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path className="sf-check-draw" d="M2.5 6.5l2.2 2.2 4.8-5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
               </span>
               <span
-                className={`hidden w-44 shrink-0 text-sm tabular-nums sm:block ${
+                className={`hidden w-40 shrink-0 text-sm tabular-nums lg:block ${
                   done ? "text-white/40" : session.isBreak ? "text-white/60" : "text-scene-soft"
                 }`}
               >
@@ -57,7 +55,7 @@ export default function SessionList({empty, removable = false}: {empty: ReactNod
                 >
                   {session.subject}
                 </span>
-                <span className="mt-0.5 block text-xs text-scene-soft/90 tabular-nums sm:hidden">
+                <span className="mt-0.5 block text-xs text-scene-soft/90 tabular-nums lg:hidden">
                   {formatTime(session.start)} – {formatTime(session.end)}
                 </span>
               </span>

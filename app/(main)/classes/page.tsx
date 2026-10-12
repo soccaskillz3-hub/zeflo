@@ -2,7 +2,7 @@
 
 import {useRef, useState, type ReactNode} from "react";
 import DatePicker from "../../components/DatePicker";
-import SectionLabel from "../../components/SectionLabel";
+import {Card, CardHead} from "../../components/Card";
 import {isCalendarFile, parseCalendarFile} from "../../lib/calendarFile";
 import {describeDays, parseSchedule, type Meeting, type ParseResult} from "../../lib/classSchedule";
 import {useClasses, type ClassMeeting} from "../../lib/classes";
@@ -84,8 +84,9 @@ CPS 109 LAB Fri 8:00AM-9:50AM ENG LG14 2026-09-08 to 2026-12-08
 
 Here's my schedule:`;
 
-const button =
-  "border border-scene/70 px-5 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-scene-ink transition hover:bg-scene/15 sf-press disabled:opacity-50";
+const button = "sf-primary px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] disabled:pointer-events-none disabled:opacity-40";
+const secondary =
+  "sf-press inline-flex items-center rounded-full border border-white/25 px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] text-white/80 transition hover:border-white/50 hover:text-white";
 const quiet = "text-xs uppercase tracking-[0.25em] text-white/60 transition hover:text-white";
 
 function formatDay(day: string) {
@@ -192,17 +193,18 @@ function Importer() {
 
   return (
     <>
-      <p className="max-w-2xl text-sm leading-relaxed text-white/75">
+      <p className="sf-serif text-balance text-4xl leading-tight sm:text-5xl">Paste your timetable.</p>
+      <p className="mt-3 max-w-2xl text-pretty text-sm leading-relaxed text-white/70">
         Copy your class schedule from your school&apos;s portal and paste it below. Where do you go?
       </p>
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Your school">
+      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Your school">
         {SCHOOLS.map((s) => (
           <button
             key={s.id}
             type="button"
             aria-pressed={school === s.id}
             onClick={() => setSchool(school === s.id ? "" : s.id)}
-            className={`rounded-full border px-3 py-1 text-xs transition ${
+            className={`rounded-full border px-3.5 py-1.5 text-xs transition ${
               school === s.id ? "border-scene/70 bg-scene/15 text-white" : "border-white/20 text-white/70 hover:border-white/40 hover:text-white"
             }`}
           >
@@ -223,7 +225,7 @@ function Importer() {
         placeholder={SCHOOLS.find((s) => s.id === school)?.example ?? EXAMPLE}
         aria-label="Your class schedule"
         spellCheck={false}
-        className="mt-5 w-full resize-y rounded-md border border-white/25 bg-slate-950/30 p-3 text-xs leading-relaxed text-white outline-none backdrop-blur-sm transition placeholder:text-white/35 focus:border-scene [text-shadow:none]"
+        className="mt-5 w-full resize-y rounded-xl border border-white/15 bg-black/25 p-4 text-xs leading-relaxed text-white outline-none transition placeholder:text-white/35 focus:border-scene/70 [text-shadow:none]"
       />
       <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
         <p className="text-xs text-white/50">
@@ -247,17 +249,17 @@ function Importer() {
         </button>
       </div>
 
-      <details className="group mt-6 max-w-2xl rounded-xl border border-scene/30 bg-scene/[0.06] [&_summary::-webkit-details-marker]:hidden">
+      <details className="group mt-6 rounded-xl border border-white/10 bg-white/[0.03] [&_summary::-webkit-details-marker]:hidden">
         <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 text-sm text-white/85">
-          <span className="text-scene-ink" aria-hidden>
-            ✦
-          </span>
+          <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-scene-soft" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" aria-hidden>
+            <path d="M2.5 4.2c0-1 .8-1.7 1.7-1.7h7.6c1 0 1.7.8 1.7 1.7v5c0 1-.8 1.7-1.7 1.7H7.2L4.4 13.3v-2.4h-.2c-1 0-1.7-.8-1.7-1.7Z" />
+          </svg>
           <span className="flex-1">Portal looks different? Let your AI read it.</span>
-          <span className="text-white/50 transition group-open:rotate-90" aria-hidden>
+          <span className="text-white/50 transition-transform duration-200 ease-out group-open:rotate-90" aria-hidden>
             →
           </span>
         </summary>
-        <div className="border-t border-scene/20 px-4 pb-4 pt-3 text-sm leading-relaxed text-white/75">
+        <div className="border-t border-white/10 px-4 pb-4 pt-3 text-sm leading-relaxed text-white/75">
           <ol className="list-decimal space-y-1.5 pl-5">
             <li>Copy the prompt below.</li>
             <li>
@@ -273,9 +275,9 @@ function Importer() {
             rows={6}
             aria-label="The prompt for your AI"
             onFocus={(e) => e.currentTarget.select()}
-            className="mt-4 w-full resize-y rounded-md border border-white/15 bg-slate-950/30 p-3 text-xs leading-relaxed text-white/70 outline-none [text-shadow:none] focus:border-scene"
+            className="mt-4 w-full resize-y rounded-xl border border-white/10 bg-black/25 p-3 text-xs leading-relaxed text-white/70 outline-none [text-shadow:none] focus:border-scene/70"
           />
-          <button type="button" onClick={copyPrompt} className={`mt-3 ${button}`}>
+          <button type="button" onClick={copyPrompt} className={`mt-3 ${secondary}`}>
             {copied ? "Copied" : "Copy the prompt"}
           </button>
         </div>
@@ -304,14 +306,14 @@ function Importer() {
       )}
 
       {result && result.meetings.length > 0 && (
-        <div className="mt-8">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-white/80">
+        <div className="mt-8 border-t border-white/10 pt-6">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">
             Found {result.meetings.length} {result.meetings.length === 1 ? "class" : "classes"} · untick any that are
             wrong
           </p>
-          <ul className="mt-4">
+          <ul className="mt-3 divide-y divide-white/10">
             {result.meetings.map((m, i) => (
-              <li key={i} className="border-b border-white/15 first:border-t">
+              <li key={i}>
                 <label className="flex cursor-pointer items-center gap-4 py-3 pl-1">
                   <input
                     type="checkbox"
@@ -368,7 +370,7 @@ function YourClasses() {
   const [error, setError] = useState("");
 
   if (!loaded || classes.length === 0) {
-    return <p className="border-y border-white/15 py-8 text-center text-sm text-white/60">No classes yet. Paste your schedule above.</p>;
+    return <p className="py-6 text-center text-sm text-white/60">No classes yet. Paste your schedule above.</p>;
   }
 
   const courses = new Map<string, ClassMeeting[]>();
@@ -387,14 +389,15 @@ function YourClasses() {
 
   return (
     <>
-      <ul>
+      <ul className="divide-y divide-white/10">
         {[...courses].map(([code, meetings]) => (
-          <li key={code} className="border-b border-white/15 py-4 first:border-t">
-            <p className="text-white">
-              {code}
-              {meetings[0].title && <span className="ml-3 text-sm text-white/60">{meetings[0].title}</span>}
+          <li key={code} className="py-4 first:pt-1">
+            <p className="flex items-baseline gap-3 text-white">
+              <span className="sf-class-block h-2.5 w-2.5 shrink-0 self-center rounded-full border" aria-hidden />
+              <span className="font-semibold">{code}</span>
+              {meetings[0].title && <span className="min-w-0 truncate text-sm text-white/60">{meetings[0].title}</span>}
             </p>
-            <ul className="mt-2">
+            <ul className="mt-2 pl-5">
               {meetings.map((m) => (
                 <li key={m.id} className="group flex items-center gap-4 py-1.5 pl-1">
                   <MeetingRow meeting={m} showCode={false} />
@@ -439,20 +442,20 @@ function YourClasses() {
 
 export default function ClassesPage() {
   return (
-    <>
-      <section className="mt-12">
-        <SectionLabel>Import your classes</SectionLabel>
-        <div className="mt-6">
+    <div className="mx-auto mt-6 grid max-w-4xl gap-4 sm:mt-10 sm:gap-5">
+      <Card className="sm:p-8">
+        <CardHead label="Import your classes" />
+        <div className="mt-5">
           <Importer />
         </div>
-      </section>
+      </Card>
 
-      <section id="your-classes" className="mt-16 scroll-mt-8">
-        <SectionLabel>Your classes</SectionLabel>
-        <div className="mt-6">
+      <Card id="your-classes" className="scroll-mt-8 sm:p-8">
+        <CardHead label="Your classes" />
+        <div className="mt-4">
           <YourClasses />
         </div>
-      </section>
-    </>
+      </Card>
+    </div>
   );
 }

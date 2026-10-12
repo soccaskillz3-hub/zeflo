@@ -8,7 +8,7 @@ export const metadata: Metadata = {title: "Create an account · Zeflo"};
 export default function SignupPage() {
   return (
     <>
-      <h1 className="text-3xl font-semibold tracking-tight">Create your account</h1>
+      <h1 className="sf-serif text-balance text-4xl leading-tight">Create your account</h1>
       <p className="mt-3 text-sm text-white/75">Your schedule and progress are private to you.</p>
       <div className="mt-10">
         <SignupForm />
