@@ -7,12 +7,12 @@ Zeflo is a calm study planner for students. Bring in your class timetable, plan 
 **Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.5.5
 
 <p>
-  <img src="docs/screenshots/forest-day.jpg" alt="Today in the forest theme on a clear day, with light falling through the trees" width="49%">
-  <img src="docs/screenshots/ocean-night.jpg" alt="Today in the ocean theme on a clear night" width="49%">
+  <img src="docs/screenshots/forest-day.jpg" alt="Today in the forest on a clear day: time studied, what's next with a Start button, and today's classes" width="49%">
+  <img src="docs/screenshots/ocean-night.jpg" alt="Today over the ocean on a clear night, on liquid glass" width="49%">
 </p>
 <p>
-  <img src="docs/screenshots/forest-snow.jpg" alt="The forest at sunrise with snow settled on the trees" width="49%">
-  <img src="docs/screenshots/ocean-rainbow.jpg" alt="A rainbow over the ocean after the rain clears" width="49%">
+  <img src="docs/screenshots/forest-snow.jpg" alt="Today in the forest at sunrise, with snow settled on the trees" width="49%">
+  <img src="docs/screenshots/ocean-rainbow.jpg" alt="A rainbow over the ocean after the rain clears, behind Today" width="49%">
 </p>
 
 ## Features
@@ -39,13 +39,22 @@ Zeflo is a calm study planner for students. Bring in your class timetable, plan 
 - **Your own account** — sign up with an email and password, and confirm it from a Zeflo email whose link works on any device (password resets work the same way). Your classes, each day's schedule, what you've finished, and your theme, sound and clock settings are saved to your account, private to you, and follow you between devices. Logging out signs out only that browser, so your other devices and your connected AI stay signed in. **Settings → Delete account** removes the account and everything in it straight away, after you type DELETE to confirm. On iPhone, Zeflo runs edge to edge: the scene fills the screen under Safari's toolbar, the strip behind the status bar takes the colour of the top of the scene (the sky, or the forest canopy) and fades into it, and everything you tap stays clear of both. Visitors who aren't logged in see a welcome page that shows how Zeflo works as they scroll: a 3D model of the planner where a pasted timetable drops in as classes, an AI fills the gaps with study sessions, a session rises into the focus timer, the real scene behind the page runs from sunrise to snow at midnight, and a streak builds. Each chapter is a resting point, so the page glides onto it when a scroll ends and a fast flick can't skip one (the model stays flat and fades for people who prefer reduced motion). The [privacy policy](https://zeflo.vercel.app/privacy), [terms](https://zeflo.vercel.app/terms) and [support](https://zeflo.vercel.app/support) pages are open to everyone.
 
 <p>
-  <img src="docs/screenshots/dashboard.jpg" alt="The dashboard at dusk in the forest: study time this week, a six-day streak and a bar for each day" width="49%">
-  <img src="docs/screenshots/week.jpg" alt="The calendar's week view, with classes and study sessions side by side" width="49%">
+  <img src="docs/screenshots/dashboard.jpg" alt="Today at dusk in the forest: the streak with the last two weeks, this week, today's sessions and upcoming tests" width="49%">
+  <img src="docs/screenshots/week.jpg" alt="The calendar's week view on a cloudy evening, with classes and study sessions side by side" width="49%">
 </p>
 <p>
-  <img src="docs/screenshots/calendar.jpg" alt="The day view, with a new session being named right inside its block" width="49%">
-  <img src="docs/screenshots/progress.jpg" alt="Progress: this week's study time by day and by course" width="49%">
+  <img src="docs/screenshots/calendar.jpg" alt="The day view in the fog: the live time, what's next, and classes on the timeline" width="49%">
+  <img src="docs/screenshots/progress.jpg" alt="Progress at sunrise: the streak, the last 30 days and six months of study days" width="49%">
 </p>
+On an iPhone 17, in Safari with the offer to add Zeflo to the Home Screen, then as the installed app (full screen, no browser around it):
+
+<p align="center">
+  <img src="docs/screenshots/iphone-install.png" alt="Zeflo in Safari on an iPhone 17, offering to add it to the Home Screen" width="24%">
+  <img src="docs/screenshots/iphone-today.png" alt="The installed Zeflo app on an iPhone 17: Today in the forest at night, with the tab bar at the bottom" width="24%">
+  <img src="docs/screenshots/iphone-calendar.png" alt="The day view on an iPhone 17, with the live time, classes and a study session" width="24%">
+  <img src="docs/screenshots/iphone-progress.png" alt="Progress on an iPhone 17: the streak, the last 30 days and the six-month grid" width="24%">
+</p>
+
 <p>
   <img src="docs/screenshots/clock.jpg" alt="The Classic clock over the ocean at night, with the seconds shown as numbers" width="49%">
   <img src="docs/screenshots/clock-analog.jpg" alt="The Analog clock in the forest at sunrise" width="49%">
