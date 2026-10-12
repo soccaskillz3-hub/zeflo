@@ -70,6 +70,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Zeflo is always dark: say so up front, so the browser's first blank frame (before the styles
+  // arrive, e.g. while the Home Screen app opens) is the night sky, not white.
+  // (No theme-color: Safari would tint its bars with it instead of the scene behind them.)
+  colorScheme: "dark",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -83,6 +87,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
+        {/* Dark until the stylesheet arrives; :where() keeps it weaker than globals.css, whose body
+            background (the scene's edge colour) must still fill the canvas behind the status bar. */}
+        <style dangerouslySetInnerHTML={{ __html: ":where(body){background:#0a1630}" }} />
         <script dangerouslySetInnerHTML={{ __html: SCENE_SCRIPT }} />
         {/* Holds on to Chrome's install offer, which can come before React starts (lib/install.ts). */}
         <script dangerouslySetInnerHTML={{ __html: INSTALL_SCRIPT }} />
