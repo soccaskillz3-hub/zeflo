@@ -1,6 +1,7 @@
 "use client";
 
 import {useSyncExternalStore} from "react";
+import {isAppleMobile, isInstalled} from "./install";
 import {createClient} from "./supabase/client";
 
 // Whether this device gets reminders, and turning them on and off. Each device is set up on its
@@ -22,12 +23,6 @@ const set = (next: State) => {
   state = next;
   listeners.forEach((l) => l());
 };
-
-const isAppleMobile = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-// Opened from the Home Screen (or as an installed app on a computer), not in a browser tab.
-export const isInstalled = () =>
-  window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & {standalone?: boolean}).standalone === true;
 
 const supported = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 

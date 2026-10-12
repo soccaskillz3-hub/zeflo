@@ -5,11 +5,13 @@ import {useCallback, useRef, useState, type CSSProperties, type KeyboardEvent} f
 import {useFormStatus} from "react-dom";
 import AiConnect from "./AiConnect";
 import DeleteAccount from "./DeleteAccount";
+import InstallGuide from "./InstallGuide";
 import Reminders from "./Reminders";
 import {forgetThisBrowser, useAccount} from "../lib/account";
 import {logOut} from "../lib/auth";
 import {useClasses} from "../lib/classes";
 import {formatDay} from "../lib/days";
+import {isPhone, useInstall} from "../lib/install";
 import {CLOCK_STYLES, START_MODES, usePrefs, type StartMode} from "../lib/prefs";
 import {useScene, type SceneStatus} from "../lib/scene";
 import {useSound} from "../lib/sound";
@@ -364,14 +366,51 @@ const REMINDER_SUMMARY = {
   on: "On for this device",
 } as const;
 
+const rowClass =
+  "group flex w-full items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/[0.08]";
+
+// Zeflo as an app on this device, while it's open in a browser tab.
+function InstallRow({onOpen}: {onOpen: () => void}) {
+  const install = useInstall();
+  if (!install || install.installed) return null;
+  const phone = isPhone(install.platform);
+  return (
+    <button type="button" aria-haspopup="dialog" onClick={onOpen} className={`${rowClass} mt-4`}>
+      <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-white/80" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {phone ? (
+          <>
+            <rect x="4" y="1.6" width="8" height="12.8" rx="1.8" />
+            <path d="M7 12.2h2" />
+          </>
+        ) : (
+          <>
+            <rect x="1.8" y="2.6" width="12.4" height="8.6" rx="1.4" />
+            <path d="M5.6 13.6h4.8" />
+          </>
+        )}
+      </svg>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[11px] uppercase tracking-[0.25em] text-white">Get the app</span>
+        <span className="mt-0.5 block truncate text-xs text-white/65">
+          {phone ? "Zeflo on your Home Screen" : install.platform === "mac-safari" ? "Zeflo in your Dock" : "Zeflo in its own window"}
+        </span>
+      </span>
+      <span className="text-white/50 transition group-hover:translate-x-0.5 group-hover:text-white" aria-hidden>
+        →
+      </span>
+    </button>
+  );
+}
+
 function RemindersRow({onOpen}: {onOpen: () => void}) {
   const {status} = useReminders();
+  const install = useInstall();
   return (
     <button
       type="button"
       aria-haspopup="dialog"
       onClick={onOpen}
-      className="group mt-4 flex w-full items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
+      className={`${rowClass} ${install && !install.installed ? "mt-2" : "mt-4"}`}
     >
       <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-white/80" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d="M4 11.5V7.2a4 4 0 0 1 8 0v4.3l1.2 1.3H2.8L4 11.5ZM6.6 14.2a1.5 1.5 0 0 0 2.8 0" />
@@ -433,6 +472,7 @@ export default function SettingsMenu() {
   const [tab, setTab] = useState<Tab>("theme");
   const [aiOpens, setAiOpens] = useState(0);
   const [remindersOpens, setRemindersOpens] = useState(0);
+  const [installOpens, setInstallOpens] = useState(0);
   const [deleteOpens, setDeleteOpens] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setOpen(false), []);
@@ -499,6 +539,12 @@ export default function SettingsMenu() {
           </div>
 
           {/* Their own windows: reminders and setting up an AI need more room than this menu has. */}
+          <InstallRow
+            onOpen={() => {
+              close();
+              setInstallOpens((n) => n + 1);
+            }}
+          />
           <RemindersRow
             onOpen={() => {
               close();
@@ -534,6 +580,7 @@ export default function SettingsMenu() {
           />
         </div>
       )}
+      <InstallGuide opens={installOpens} />
       <Reminders opens={remindersOpens} />
       <AiConnect opens={aiOpens} />
       <DeleteAccount key={deleteOpens} opens={deleteOpens} />

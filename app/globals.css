@@ -1649,6 +1649,36 @@ dialog.sf-pop::backdrop { animation: sf-fade-only 200ms ease both; }
   .sf-in { animation-name: sf-fade-only; }
 }
 
+/* Today's offers (components/Nudges.tsx). The install offer floats up from below; the "No
+   problem" note after a Not now fades away by itself. */
+.sf-float { animation: sf-float-in 420ms var(--sf-ease-drawer) backwards; }
+@keyframes sf-float-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+}
+.sf-note { animation: sf-in 300ms var(--sf-ease-out) backwards, sf-note-out 500ms ease 3.7s forwards; }
+@keyframes sf-note-out {
+  to { opacity: 0; transform: translateY(-4px); filter: blur(2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-float { animation-name: sf-fade-only; }
+  .sf-note { animation: sf-fade-only 300ms ease backwards, sf-note-out-still 500ms ease 3.7s forwards; }
+  @keyframes sf-note-out-still { to { opacity: 0; } }
+}
+
+/* A page on its way (app/(main)/loading.tsx): empty cards that fade in only if the wait is
+   noticeable, then breathe gently until the page replaces them. */
+.sf-skeleton { animation: sf-skeleton-in 240ms var(--sf-ease-out) 150ms backwards; }
+.sf-skeleton > .sf-card { animation: sf-breathe 1.6s ease-in-out 400ms infinite; }
+@keyframes sf-skeleton-in {
+  from { opacity: 0; }
+}
+@keyframes sf-breathe {
+  50% { opacity: 0.6; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-skeleton > .sf-card { animation: none; }
+}
+
 /* The one solid button per screen (Start, Add): filled with the scene's accent. */
 .sf-primary {
   display: inline-flex;

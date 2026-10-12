@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {usePathname} from "next/navigation";
-import type {ReactNode} from "react";
+import {useState, type MouseEvent, type ReactNode} from "react";
 import MuteButton from "./MuteButton";
 import SettingsMenu from "./SettingsMenu";
 import {formatDay} from "../lib/days";
@@ -66,18 +66,37 @@ const SECTIONS: Section[] = [
   },
 ];
 
-function SectionLinks({path}: {path: string}) {
-  const {list, pill} = useSlidingPill(path);
+// The section being opened. A tap moves the highlight straight away instead of after the page
+// has arrived from the server (which can take a moment on a phone); once the address changes,
+// the address decides again. A click that opens a new tab (Cmd, Ctrl, Shift) doesn't count.
+type Nav = {path: string; isCurrent: (s: Section) => boolean; open: (s: Section) => (e: MouseEvent) => void};
+
+function useNav(path: string): Nav {
+  const [opening, setOpening] = useState<{label: string; from: string} | null>(null);
+  const target = opening?.from === path ? opening.label : null;
+  return {
+    path: target ?? path,
+    isCurrent: (s) => (target ? s.label === target : s.current(path)),
+    open: (s) => (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      setOpening({label: s.label, from: path});
+    },
+  };
+}
+
+function SectionLinks({nav}: {nav: Nav}) {
+  const {list, pill} = useSlidingPill(nav.path);
   return (
     <nav aria-label="Sections" className="max-sm:hidden">
       <div ref={list} className="sf-card relative flex rounded-full p-1">
         <span ref={pill} className="sf-nav-pill" aria-hidden style={{top: 4, bottom: 4}} />
         {SECTIONS.map((s) => {
-          const current = s.current(path);
+          const current = nav.isCurrent(s);
           return (
             <Link
               key={s.label}
               href={s.href}
+              onClick={nav.open(s)}
               aria-current={current ? "page" : undefined}
               className={`relative rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.22em] transition-colors lg:px-5 ${
                 current ? "text-scene-ink" : "text-white/65 hover:text-white"
@@ -93,18 +112,19 @@ function SectionLinks({path}: {path: string}) {
 }
 
 // Phones: the sections as a bar at the bottom of the screen, in reach of a thumb.
-function TabBar({path}: {path: string}) {
-  const {list, pill} = useSlidingPill(path);
+function TabBar({nav}: {nav: Nav}) {
+  const {list, pill} = useSlidingPill(nav.path);
   return (
     <nav aria-label="Sections" className="sf-tabbar sm:hidden">
       <div ref={list} className="sf-card relative mx-auto grid max-w-md grid-cols-4 rounded-[1.4rem] p-1.5">
         <span ref={pill} className="sf-nav-pill rounded-2xl" aria-hidden style={{top: 6, bottom: 6, borderRadius: "1rem"}} />
         {SECTIONS.map((s) => {
-          const current = s.current(path);
+          const current = nav.isCurrent(s);
           return (
             <Link
               key={s.label}
               href={s.phoneHref ?? s.href}
+              onClick={nav.open(s)}
               aria-current={current ? "page" : undefined}
               className={`relative flex flex-col items-center gap-1 rounded-2xl py-2 transition-colors ${
                 current ? "text-scene-ink" : "text-white/60"
@@ -122,6 +142,7 @@ function TabBar({path}: {path: string}) {
 
 export default function AppHeader() {
   const pathname = usePathname();
+  const nav = useNav(pathname);
   // The visitor's own day, known only once mounted: the server runs on UTC, which can already be
   // tomorrow (or still yesterday). It also turns over at midnight while the page is open.
   const {today: day} = useSchedule();
@@ -135,7 +156,7 @@ export default function AppHeader() {
         <Link href="/" className="text-sm font-semibold tracking-[0.3em] text-white sm:tracking-[0.4em]">
           ZEFLO
         </Link>
-        <SectionLinks path={pathname} />
+        <SectionLinks nav={nav} />
         <div className="flex items-center gap-4 sm:gap-5">
           {/* The date: short on phones, full on wide screens, and left out where the section links
               need the room (and on the narrowest phones). */}
@@ -158,7 +179,7 @@ export default function AppHeader() {
           <SettingsMenu />
         </div>
       </header>
-      <TabBar path={pathname} />
+      <TabBar nav={nav} />
     </>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import {useEffect, useRef, useState, type ReactNode} from "react";
+import {useEffect, useRef, useState} from "react";
+import {InstallSteps} from "./InstallGuide";
 import {REMIND_LEADS, usePrefs} from "../lib/prefs";
 import {sendTestReminder} from "../lib/reminderActions";
 import {turnOffReminders, turnOnReminders, useReminders} from "../lib/reminders";
@@ -15,17 +16,6 @@ const pill = (active: boolean) =>
   `rounded-md px-2.5 py-1.5 text-[11px] uppercase tracking-[0.15em] transition ${
     active ? "sf-panel-active text-white" : "bg-white/[0.06] text-white/70 hover:bg-white/[0.12] hover:text-white"
   }`;
-
-function Step({n, children}: {n: number; children: ReactNode}) {
-  return (
-    <li className="flex gap-3">
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-scene/60 text-[10px] text-scene-ink" aria-hidden>
-        {n}
-      </span>
-      <p className="min-w-0 flex-1 text-xs leading-relaxed text-white/85">{children}</p>
-    </li>
-  );
-}
 
 function Toggle({checked, onChange, title, hint}: {checked: boolean; onChange: (on: boolean) => void; title: string; hint: string}) {
   return (
@@ -48,20 +38,6 @@ function Toggle({checked, onChange, title, hint}: {checked: boolean; onChange: (
   );
 }
 
-// The ••• and Share icons, drawn the way Safari shows them, so the steps can be followed by eye.
-const MoreIcon = () => (
-  <svg viewBox="0 0 16 16" className="inline h-3.5 w-3.5 align-[-2px]" fill="currentColor" aria-hidden>
-    <circle cx="3" cy="8" r="1.4" />
-    <circle cx="8" cy="8" r="1.4" />
-    <circle cx="13" cy="8" r="1.4" />
-  </svg>
-);
-const ShareIcon = () => (
-  <svg viewBox="0 0 16 16" className="inline h-3.5 w-3.5 align-[-2px]" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M8 1.8v8.4M5.2 4.4 8 1.6l2.8 2.8M5.4 6.6H4.2v7.6h7.6V6.6h-1.2" />
-  </svg>
-);
-
 function DeviceSetup() {
   const {status, endpoint} = useReminders();
   const [busy, setBusy] = useState(false);
@@ -81,16 +57,9 @@ function DeviceSetup() {
     return (
       <div className="rounded-xl border border-scene/30 bg-scene/[0.07] p-4">
         <p className="text-xs leading-relaxed text-white/90">On iPhone and iPad, reminders work once Zeflo is on your Home Screen. It takes a few seconds:</p>
-        <ol className="mt-3 space-y-3">
-          <Step n={1}>
-            In Safari, tap <MoreIcon /> next to the address bar, then <span className="text-white">Share</span>. On older iPhones, tap{" "}
-            <ShareIcon /> at the bottom.
-          </Step>
-          <Step n={2}>
-            Scroll down and tap <span className="text-white">Add to Home Screen</span>. If it&apos;s not there, tap View More.
-          </Step>
-          <Step n={3}>Open Zeflo from your Home Screen and turn reminders on here.</Step>
-        </ol>
+        <div className="mt-3">
+          <InstallSteps platform="iphone" />
+        </div>
       </div>
     );
   }

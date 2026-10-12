@@ -4,6 +4,7 @@ import "./globals.css";
 import GlassLight from "./components/GlassLight";
 import { AccountProvider } from "./lib/account";
 import { ClassesProvider } from "./lib/classes";
+import { INSTALL_SCRIPT } from "./lib/install";
 import { PrefsProvider } from "./lib/prefs";
 import { RemindersSync } from "./lib/reminders";
 import { getUser } from "./lib/dal";
@@ -67,6 +68,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: SCENE_SCRIPT }} />
+        {/* Holds on to Chrome's install offer, which can come before React starts (lib/install.ts). */}
+        <script dangerouslySetInnerHTML={{ __html: INSTALL_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
         <AccountProvider account={user}>

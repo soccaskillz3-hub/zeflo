@@ -1,6 +1,5 @@
 import AppHeader from "../components/AppHeader";
-import ClassesPrompt from "../components/ClassesPrompt";
-import RemindersPrompt from "../components/RemindersPrompt";
+import Nudges from "../components/Nudges";
 import ScheduleNotices from "../components/ScheduleNotices";
 import {requireUser} from "../lib/dal";
 
@@ -14,8 +13,7 @@ export default async function MainLayout({children}: LayoutProps<"/">) {
       <div className="mx-auto max-w-5xl px-4 pb-36 pt-6 sm:px-8 sm:pb-24 sm:pt-8">
         <AppHeader />
         <ScheduleNotices />
-        <ClassesPrompt />
-        <RemindersPrompt />
+        <Nudges />
         {children}
       </div>
     </main>
