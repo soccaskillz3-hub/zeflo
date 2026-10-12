@@ -5,6 +5,7 @@ import GlassLight from "./components/GlassLight";
 import { AccountProvider } from "./lib/account";
 import { ClassesProvider } from "./lib/classes";
 import { PrefsProvider } from "./lib/prefs";
+import { RemindersSync } from "./lib/reminders";
 import { getUser } from "./lib/dal";
 import { SceneProvider } from "./lib/scene";
 import { SCENE_SCRIPT } from "./lib/sceneScript";
@@ -41,6 +42,9 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "Zeflo",
   description: "Plan your study day and track your progress.",
+  // Added to an iPhone's Home Screen, Zeflo opens as an app (see manifest.ts), with the scene
+  // running up under the status bar as it does in Safari.
+  appleWebApp: {capable: true, title: "Zeflo", statusBarStyle: "black-translucent"},
 };
 
 // Draw edge to edge, under the iPhone's status bar and Safari's toolbar, so the scene fills the
@@ -70,6 +74,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <GlassLight />
             <SoundProvider>
               {user && <SettingsSync key={`settings-${user.id}`} userId={user.id} />}
+              {user && <RemindersSync />}
               {/* Keyed by account, so nothing from one login carries over to the next. */}
               <PrefsProvider key={user?.id ?? "guest"} userId={user?.id ?? null}>
                 <ScheduleProvider key={user?.id ?? "guest"} userId={user?.id ?? null}>

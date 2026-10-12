@@ -5,6 +5,7 @@ import {useCallback, useRef, useState, type CSSProperties, type KeyboardEvent} f
 import {useFormStatus} from "react-dom";
 import AiConnect from "./AiConnect";
 import DeleteAccount from "./DeleteAccount";
+import Reminders from "./Reminders";
 import {forgetThisBrowser, useAccount} from "../lib/account";
 import {logOut} from "../lib/auth";
 import {useClasses} from "../lib/classes";
@@ -13,6 +14,7 @@ import {CLOCK_STYLES, START_MODES, usePrefs, type StartMode} from "../lib/prefs"
 import {useScene, type SceneStatus} from "../lib/scene";
 import {useSound} from "../lib/sound";
 import {THEMES, type Theme} from "../lib/themes";
+import {useReminders} from "../lib/reminders";
 import {useDismiss} from "../lib/useDismiss";
 import {TIMES, WEATHERS, type TimeOfDay, type Weather} from "../lib/weather";
 import type {SoundSettings} from "../lib/audio/engine";
@@ -353,6 +355,41 @@ function ClassesTab({onNavigate}: {onNavigate: () => void}) {
   );
 }
 
+const REMINDER_SUMMARY = {
+  checking: " ",
+  unsupported: "Not available in this browser",
+  install: "Add Zeflo to your Home Screen first",
+  blocked: "Blocked in this device's settings",
+  off: "Off on this device",
+  on: "On for this device",
+} as const;
+
+function RemindersRow({onOpen}: {onOpen: () => void}) {
+  const {status} = useReminders();
+  return (
+    <button
+      type="button"
+      aria-haspopup="dialog"
+      onClick={onOpen}
+      className="group mt-4 flex w-full items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
+    >
+      <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-white/80" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M4 11.5V7.2a4 4 0 0 1 8 0v4.3l1.2 1.3H2.8L4 11.5ZM6.6 14.2a1.5 1.5 0 0 0 2.8 0" />
+      </svg>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[11px] uppercase tracking-[0.25em] text-white">Reminders</span>
+        <span className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-white/65">
+          {status === "on" && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" aria-hidden />}
+          {REMINDER_SUMMARY[status]}
+        </span>
+      </span>
+      <span className="text-white/50 transition group-hover:translate-x-0.5 group-hover:text-white" aria-hidden>
+        →
+      </span>
+    </button>
+  );
+}
+
 function LogOutButton() {
   const {pending} = useFormStatus();
   return (
@@ -395,6 +432,7 @@ export default function SettingsMenu() {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("theme");
   const [aiOpens, setAiOpens] = useState(0);
+  const [remindersOpens, setRemindersOpens] = useState(0);
   const [deleteOpens, setDeleteOpens] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setOpen(false), []);
@@ -460,7 +498,13 @@ export default function SettingsMenu() {
             {tab === "classes" && <ClassesTab onNavigate={close} />}
           </div>
 
-          {/* Its own window: setting up an AI needs more room than this menu has. */}
+          {/* Their own windows: reminders and setting up an AI need more room than this menu has. */}
+          <RemindersRow
+            onOpen={() => {
+              close();
+              setRemindersOpens((n) => n + 1);
+            }}
+          />
           <button
             type="button"
             aria-haspopup="dialog"
@@ -468,7 +512,7 @@ export default function SettingsMenu() {
               close();
               setAiOpens((n) => n + 1);
             }}
-            className="group mt-4 flex w-full items-center gap-3 rounded-lg border border-scene/30 bg-scene/[0.07] px-3 py-2.5 text-left transition hover:border-scene/60 hover:bg-scene/[0.12]"
+            className="group mt-2 flex w-full items-center gap-3 rounded-lg border border-scene/30 bg-scene/[0.07] px-3 py-2.5 text-left transition hover:border-scene/60 hover:bg-scene/[0.12]"
           >
             <span className="text-base leading-none text-scene-ink" aria-hidden>
               ✦
@@ -490,6 +534,7 @@ export default function SettingsMenu() {
           />
         </div>
       )}
+      <Reminders opens={remindersOpens} />
       <AiConnect opens={aiOpens} />
       <DeleteAccount key={deleteOpens} opens={deleteOpens} />
     </div>

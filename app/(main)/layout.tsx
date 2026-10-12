@@ -1,5 +1,6 @@
 import AppHeader from "../components/AppHeader";
 import ClassesPrompt from "../components/ClassesPrompt";
+import RemindersPrompt from "../components/RemindersPrompt";
 import ScheduleNotices from "../components/ScheduleNotices";
 import {requireUser} from "../lib/dal";
 
@@ -14,6 +15,7 @@ export default async function MainLayout({children}: LayoutProps<"/">) {
         <AppHeader />
         <ScheduleNotices />
         <ClassesPrompt />
+        <RemindersPrompt />
         {children}
       </div>
     </main>

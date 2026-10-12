@@ -15,6 +15,9 @@ export const CLOCK_STYLES = [
 ] as const;
 export type ClockStyle = (typeof CLOCK_STYLES)[number]["id"];
 
+export const REMIND_LEADS = [0, 5, 10, 15, 30] as const;
+export type RemindLead = (typeof REMIND_LEADS)[number];
+
 // Small per-account choices, kept in user_settings.prefs (a JSON object, so adding one needs
 // no migration). Read from the database, so each is checked before it's trusted.
 export type Prefs = {
@@ -23,9 +26,25 @@ export type Prefs = {
   startDefaultAsked: boolean; // asked once whether their first choice should be the default
   clockStyle: ClockStyle;
   clockSeconds: boolean; // the classic clock shows seconds as numbers, not a line filling each minute (toggled on the clock)
+  // Reminders (sent to the devices where they're turned on; see reminders.ts). The database reads
+  // these too, with the same defaults: supabase/migrations/20261012120000_reminders.sql.
+  remindSessions: RemindLead; // minutes before each study session, 0 = off
+  remindTests: boolean; // the evening before a test
+  remindStreak: boolean; // at 8 PM, when the streak needs a session
+  remindersHintDismissed: boolean; // said "Not now" to the reminders card on Today
 };
 
-const DEFAULTS: Prefs = {classPromptDismissed: false, startMode: "ask", startDefaultAsked: false, clockStyle: "classic", clockSeconds: false};
+const DEFAULTS: Prefs = {
+  classPromptDismissed: false,
+  startMode: "ask",
+  startDefaultAsked: false,
+  clockStyle: "classic",
+  clockSeconds: false,
+  remindSessions: 10,
+  remindTests: true,
+  remindStreak: true,
+  remindersHintDismissed: false,
+};
 
 const oneOf = <T extends string>(value: unknown, allowed: readonly T[], fallback: T) =>
   allowed.includes(value as T) ? (value as T) : fallback;
@@ -41,6 +60,10 @@ function parse(raw: Record<string, unknown>): Prefs {
       DEFAULTS.clockStyle,
     ),
     clockSeconds: raw.clockSeconds === true,
+    remindSessions: REMIND_LEADS.includes(raw.remindSessions as RemindLead) ? (raw.remindSessions as RemindLead) : DEFAULTS.remindSessions,
+    remindTests: raw.remindTests !== false,
+    remindStreak: raw.remindStreak !== false,
+    remindersHintDismissed: raw.remindersHintDismissed === true,
   };
 }
 

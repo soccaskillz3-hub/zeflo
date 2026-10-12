@@ -32,7 +32,12 @@ export default function PrivacyPage() {
           progress and streak.
         </li>
         <li>
-          <strong>Your settings:</strong> your theme, scene, sound and timer choices.
+          <strong>Your settings:</strong> your theme, scene, sound, timer and reminder choices.
+        </li>
+        <li>
+          <strong>Your devices, if you turn on reminders:</strong> for each device, the address its browser or phone gives Zeflo for sending it
+          notifications, and its time zone, so reminders arrive at the right local time. Zeflo also notes which reminders it has sent, so none
+          goes out twice, and forgets that after a month.
         </li>
       </ul>
 
@@ -80,6 +85,10 @@ export default function PrivacyPage() {
         <li>
           <strong>Open-Meteo</strong> provides the weather for the scene, as described above.
         </li>
+        <li>
+          <strong>Your device&apos;s push service</strong> (Apple&apos;s, Google&apos;s or Mozilla&apos;s, depending on the device) delivers
+          reminders if you turn them on. Each reminder is encrypted so that only your device can read it.
+        </li>
       </ul>
       <p>
         These services may store data outside your country. Zeflo won&apos;t share your information with anyone else unless the law requires
@@ -96,7 +105,8 @@ export default function PrivacyPage() {
       <ul>
         <li>Change or delete any class, study session or setting in the app at any time.</li>
         <li>Disconnect any AI assistant from Settings → Your AI.</li>
-        <li>Logging out clears what Zeflo kept in that browser.</li>
+        <li>Turn reminders off for a device from Settings → Reminders, or in the device&apos;s own notification settings.</li>
+        <li>Logging out clears what Zeflo kept in that browser, and stops reminders there.</li>
         <li>Delete your account and everything in it from Settings → Delete account. It happens straight away and can&apos;t be undone.</li>
         <li>
           To get a copy of your data, get in touch through <a href={CONTACT.href}>{CONTACT.label}</a>. We&apos;ll check the account is yours

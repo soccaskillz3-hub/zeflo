@@ -4,7 +4,7 @@
 
 Zeflo is a calm study planner for students. Bring in your class timetable, plan study sessions around it (or ask your own AI to plan them for you), run a full-screen focus timer or clock for each one, and watch your streak and progress fill in — all on panes of liquid glass over a living scene, an ocean or a forest, that follows the real weather and time of day where you are, with sound to match.
 
-**Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.4.0
+**Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.5.0
 
 <p>
   <img src="docs/screenshots/forest-day.jpg" alt="Today in the forest theme on a clear day, with light falling through the trees" width="49%">
@@ -32,6 +32,8 @@ Zeflo is a calm study planner for students. Bring in your class timetable, plan 
 - **Start? — timer or clock** — pressing **Start?** on a session asks whether you want the study timer or the clock. The first time you choose, it asks once whether to make that your default; either way it never asks again, and you can change it any time in **Settings → Focus**.
 - **Focus timer** — a full-screen countdown of the session's length. Pause with the button or the space bar, take a break (10, 20, 30 minutes or your own length), add 10 more minutes when time's up, and press **Done** for a little celebration. The timer survives reloads and leaving the page, and the tab title shows the time left.
 - **Clock** — a full-screen clock over the scene, for when you just want the time and the view (the clock button in the header, or from Start?). Swipe (a finger, or two fingers on a trackpad), drag, use the arrow keys or the dots to choose a style: **Classic** big numbers, an **Analog** dial with a sweeping second hand, the time in **Words** ("just after twenty-five past two"), **Orbit** rings for hours, minutes and seconds, or a **Sun path** showing where the sun or moon is in its arc. Your style is saved to your account, and Classic can show the seconds as numbers instead of a line (the small toggle under it). Opening the clock draws the scene in around you — deeper colour and contrast, a gentle zoom and a soft vignette — and the time sharpens into view. The controls fade away when you're not moving the mouse, it can go full screen, and it keeps the screen awake. Opened from a session, it shows that session (with a progress line that moves smoothly) and a **Done** button.
+- **Reminders** — a notification **before each study session** (5, 10, 15 or 30 minutes ahead, or off), at 6 PM **the evening before a test**, and at 8 PM when **your streak** needs a session today, even when Zeflo is closed. Turn them on per device in **Settings → Reminders** (or from the card on Today), choose what you want reminded about once for all your devices, and send yourself a test. They follow your time zone, and logging out stops them on that device.
+- **On your Home Screen** — add Zeflo to an iPhone's Home Screen (Safari's ••• or Share button → Add to Home Screen) and it opens like an app: full screen, no browser toolbar, its own icon and place in the app switcher. That's also what lets an iPhone show reminders; Zeflo shows the steps when they're needed. Android and computers can install it from the browser too, or get reminders right in the browser.
 - **Time and date pickers** in the site's own style — hour, minute and AM/PM columns for times, and a month calendar for term dates, both with full keyboard support.
 - **Your own account** — sign up with an email and password, and confirm it from a Zeflo email whose link works on any device (password resets work the same way). Your classes, each day's schedule, what you've finished, and your theme, sound and clock settings are saved to your account, private to you, and follow you between devices. Logging out signs out only that browser, so your other devices and your connected AI stay signed in. **Settings → Delete account** removes the account and everything in it straight away, after you type DELETE to confirm. On iPhone, Zeflo runs edge to edge: the scene fills the screen under Safari's toolbar, the strip behind the status bar takes the colour of the top of the scene (the sky, or the forest canopy) and fades into it, and everything you tap stays clear of both. Visitors who aren't logged in see a welcome page that shows how Zeflo works as they scroll: a 3D model of the planner where a pasted timetable drops in as classes, an AI fills the gaps with study sessions, a session rises into the focus timer, the real scene behind the page runs from sunrise to snow at midnight, and a streak builds. Each chapter is a resting point, so the page glides onto it when a scroll ends and a fast flick can't skip one (the model stays flat and fades for people who prefer reduced motion). The [privacy policy](https://zeflo.vercel.app/privacy), [terms](https://zeflo.vercel.app/terms) and [support](https://zeflo.vercel.app/support) pages are open to everyone.
 
@@ -121,6 +123,16 @@ Zeflo stores accounts and schedules in [Supabase](https://supabase.com) (free pl
 
 5. Optional, for the AI connector: in **Authentication → OAuth Server**, turn on the OAuth 2.1 server, set the **Authorization Path** to `/oauth/consent`, and allow **dynamic client registration** (assistants like Claude register themselves). The connector lives at `/api/mcp`.
 
+6. Optional, for reminders: create the keys that sign Zeflo's notifications with `npx web-push generate-vapid-keys`, and add them to `.env.local` (and your host's environment):
+
+   ```
+   NEXT_PUBLIC_VAPID_PUBLIC_KEY=...
+   VAPID_PRIVATE_KEY=...
+   REMINDERS_SECRET=...
+   ```
+
+   The reminders migration turns on `pg_cron` and `pg_net`, and makes a random secret in **Vault**. Copy that secret into `REMINDERS_SECRET` (the migration's last lines show how to read it). Every minute something is due, the database calls `/api/reminders` with it; if you deploy somewhere other than `zeflo.vercel.app`, change the address in the cron job too.
+
 After at least two people have signed up, [`supabase/tests/privacy.sql`](supabase/tests/privacy.sql) checks in the SQL Editor that neither account can see or change the other's data.
 
 ```bash
@@ -155,14 +167,16 @@ Open-Meteo's free API is for non-commercial use, which suits a personal project 
 - [Geist](https://vercel.com/font), [Jost](https://fonts.google.com/specimen/Jost) and [Fraunces](https://fonts.google.com/specimen/Fraunces)
 - [Supabase](https://supabase.com) for accounts and the Postgres database, with row level security
 - [Open-Meteo](https://open-meteo.com) for weather, sunrise and sunset
+- Web Push ([web-push](https://github.com/web-push-libs/web-push)) for reminders, sent on a schedule by Supabase's `pg_cron` and `pg_net`
 - The [Model Context Protocol](https://modelcontextprotocol.io) ([mcp-handler](https://github.com/vercel/mcp-handler)) and Supabase's OAuth 2.1 server for the AI connector
 
 ## Project structure
 
 ```
 proxy.ts                        # Keeps logins fresh; welcome page or login for visitors
+public/sw.js                    # Service worker: shows reminders (caches nothing)
 supabase/
-├── migrations/                 # Tables, privacy rules, account deletion (run in the SQL Editor)
+├── migrations/                 # Tables, privacy rules, account deletion, reminders (run in the SQL Editor)
 ├── templates/                  # Zeflo's confirm and reset emails (pasted into Supabase)
 └── tests/privacy.sql           # Checks accounts can't reach each other's data
 app/
@@ -178,6 +192,8 @@ app/
 ├── (auth)/                     # Log in, sign up, forgot and reset password
 ├── auth/confirm/route.ts       # Where links in Zeflo's emails land
 ├── api/mcp/route.ts            # The AI connector (MCP server); tools in lib/mcp/tools.ts
+├── api/reminders/route.ts      # Sends the reminders that are due (called by pg_cron in Supabase)
+├── manifest.ts                 # Makes Zeflo installable on a Home Screen (icons in public/)
 ├── (auth)/oauth/consent/       # Where people allow an AI assistant to connect
 ├── welcome/page.tsx            # The front page for visitors who aren't logged in
 │   ├── Story.tsx               # How Zeflo works, as a 3D scroll story (styles: .wl-* in globals.css)
@@ -206,11 +222,15 @@ app/
 │   ├── StartButton.tsx         # Start?: the timer-or-clock choice
 │   ├── SettingsMenu.tsx        # Theme, Sound, Focus, Classes, account
 │   ├── AiConnect.tsx           # The Your AI window: connect, prompts, disconnect
+│   ├── Reminders.tsx           # Settings → Reminders: turn on for this device, what to remind about
+│   ├── RemindersPrompt.tsx     # The one-time offer of reminders on Today
 │   ├── DeleteAccount.tsx       # Settings → Delete account, with a type-DELETE check
 │   ├── MuteButton.tsx
 │   ├── TimePicker.tsx, DatePicker.tsx  # In the site's style, not the browser's
 │   └── …                       # Header, session form and list
 └── lib/
+    ├── reminders.ts            # This device's reminders: on, off, or how to get them
+    ├── push.ts                 # Sending notifications, and what each reminder says
     ├── scene.tsx               # Theme, live weather and time of day
     ├── sceneScript.ts          # Sets the scene before the first paint (for Safari's status bar)
     ├── sound.tsx               # Sound settings, starts the soundscape

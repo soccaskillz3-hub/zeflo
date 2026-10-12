@@ -1,6 +1,7 @@
 "use client";
 
 import {createContext, useContext, type ReactNode} from "react";
+import {forgetRemindersHere} from "./reminders";
 
 export type Account = {id: string; email: string};
 
@@ -17,7 +18,7 @@ export function useAccount() {
 
 // Everything Zeflo keeps in this browser (the keys still say "studyflow", the app's old name:
 // renaming them would reset everyone's saved theme, sound and timer). Cleared when logging out, so the next person to
-// log in here doesn't inherit any of it.
+// log in here doesn't inherit any of it (reminders included: this device stops getting them).
 const LOCAL_KEYS = [
   "studyflow:v1",
   "studyflow:timer",
@@ -29,6 +30,7 @@ const LOCAL_KEYS = [
 ];
 
 export function forgetThisBrowser() {
+  forgetRemindersHere();
   try {
     LOCAL_KEYS.forEach((key) => localStorage.removeItem(key));
     sessionStorage.removeItem("studyflow:celebrate");
