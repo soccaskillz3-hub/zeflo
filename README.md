@@ -4,7 +4,7 @@
 
 Zeflo is a calm study planner for students. Bring in your class timetable, plan study sessions around it (or ask your own AI to plan them for you), run a full-screen focus timer or clock for each one, and watch your streak and progress fill in — all on panes of liquid glass over a living scene, an ocean or a forest, that follows the real weather and time of day where you are, with sound to match.
 
-**Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.5.4
+**Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.5.5
 
 <p>
   <img src="docs/screenshots/forest-day.jpg" alt="Today in the forest theme on a clear day, with light falling through the trees" width="49%">
@@ -89,7 +89,7 @@ Each theme has its own **timer font** for a completely different feel — a thin
 - **Six weathers** — clear, cloudy, rain, storm (lightning, with thunder that follows it), snow and fog, from your current local weather.
 - **Snow builds up** gradually: it settles on the ground and the trees over a couple of minutes, and piles up along the bottom of the timer while you focus.
 - **A rainbow** appears for a while when rain or a storm clears.
-- Choose **Auto** to follow your location, or pick any weather and time yourself.
+- Choose **Auto** to follow the weather where you are (no location prompt: see below), or pick any weather and time yourself.
 
 ### Sound
 
@@ -140,7 +140,7 @@ After at least two people have signed up, [`supabase/tests/privacy.sql`](supabas
 npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000). Your browser will ask for your location so the scene can match your weather; if you decline, Zeflo falls back to a clear sky and your device's clock.
+Then open [http://localhost:3000](http://localhost:3000). Locally there's no Vercel to say where you are, so the scene shows a clear sky with your device's clock (or pick a weather in Settings).
 
 | Command         | What it does               |
 | --------------- | -------------------------- |
@@ -153,10 +153,10 @@ In development, `window.__zefloSound` in the browser console exposes the audio m
 
 ## How weather and time work
 
-When you allow location access, Zeflo asks [Open-Meteo](https://open-meteo.com) for the current weather code and today's sunrise and sunset, then refreshes every 30 minutes. Your coordinates are rounded to two decimal places (about 1 km) before being sent, and are never stored.
+Zeflo never asks for your location. Vercel, which hosts it, adds the rough area each request comes from (usually the city, from the connection) to the request; Zeflo rounds those coordinates to two decimal places (about 1 km) and asks [Open-Meteo](https://open-meteo.com) for the current weather code and today's sunrise and sunset, then refreshes every 30 minutes. Nothing is stored. **Settings → Theme → Weather & time of day** shows the city it's using.
 
 - **Weather** comes from Open-Meteo's [WMO weather codes](https://open-meteo.com/en/docs#weather_variable_documentation), grouped into the six scenes.
-- **Time of day**: sunrise runs from 45 minutes before to 75 minutes after sunrise; dusk from an hour before to 45 minutes after sunset; day and night fill the rest. Without location, sunrise and sunset are assumed to be 6:30 AM and 7:00 PM.
+- **Time of day**: sunrise runs from 45 minutes before to 75 minutes after sunrise; dusk from an hour before to 45 minutes after sunset; day and night fill the rest. When the area isn't known (e.g. running locally), sunrise and sunset are assumed to be 6:30 AM and 7:00 PM.
 
 Open-Meteo's free API is for non-commercial use, which suits a personal project like this.
 
@@ -235,6 +235,7 @@ app/
     ├── install.ts              # Which phone or browser this is, and whether Zeflo is installed
     ├── push.ts                 # Sending notifications, and what each reminder says
     ├── scene.tsx               # Theme, live weather and time of day
+    ├── place.ts                # Roughly where the visitor is, from Vercel's request headers
     ├── sceneScript.ts          # Sets the scene before the first paint (for Safari's status bar)
     ├── sound.tsx               # Sound settings, starts the soundscape
     ├── audio/

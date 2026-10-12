@@ -6,7 +6,13 @@ import {SCENE_KEY} from "./sceneScript";
 import {THEME_IDS, type Theme} from "./themes";
 import {fetchWeather, timeOfDay, TIMES, WEATHERS, type SunTimes, type TimeOfDay, type Weather} from "./weather";
 
-export type SceneStatus = "locating" | "live" | "denied" | "error";
+// locating: the weather is on its way. unknown: there's no telling where the visitor is (no
+// Vercel in front, e.g. in development), so auto shows clear skies and the device's clock.
+export type SceneStatus = "locating" | "live" | "unknown" | "error";
+
+// Roughly where the visitor is, from the server (lib/place.ts). A plain type here, since this
+// file runs in the browser.
+export type ScenePlace = {latitude: number; longitude: number; city: string | null};
 // A scene shown for a moment and not saved: the welcome page runs through a few skies.
 export type ScenePreview = {theme: Theme; time: TimeOfDay; weather: Weather};
 
@@ -20,6 +26,7 @@ type Scene = {
   weather: Weather; // what's showing: the override if set, else live weather
   time: TimeOfDay;
   live: Weather | null; // weather at the visitor's location, once known
+  city: string | null; // the visitor's city, when known
   sun: SunTimes | null; // today's sunrise and sunset there, once known
   status: SceneStatus;
   ready: boolean; // the client clock is known, so `time` is the visitor's, not a placeholder
@@ -54,7 +61,7 @@ function writeOverride(key: string, value: string | null) {
 // Works out the scene (the chosen theme, with live weather + time of day or the visitor's
 // overrides), draws the backdrop, and shares the scene with the rest of the app so menus can
 // match it and change it.
-export function SceneProvider({children}: {children: ReactNode}) {
+export function SceneProvider({place, children}: {place: ScenePlace | null; children: ReactNode}) {
   const [live, setLive] = useState<{weather: Weather; sun: SunTimes | null} | null>(null);
   const [status, setStatus] = useState<SceneStatus>("locating");
   const [theme, setTheme] = useState<Theme>("ocean");
@@ -89,36 +96,38 @@ export function SceneProvider({children}: {children: ReactNode}) {
     return () => clearInterval(id);
   }, []);
 
+  // The weather where the visitor is, using the city the server worked out from their connection,
+  // so the browser never has to ask for their location. Refreshed every half hour.
+  const latitude = place?.latitude;
+  const longitude = place?.longitude;
   useEffect(() => {
+    if (latitude === undefined || longitude === undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- nothing to look up
+      setStatus("unknown");
+      return;
+    }
     let cancelled = false;
     const controller = new AbortController();
 
-    const update = () =>
-      navigator.geolocation.getCurrentPosition(
-        async ({coords}) => {
-          try {
-            const result = await fetchWeather(coords.latitude, coords.longitude, controller.signal);
-            if (cancelled) return;
-            setLive(result);
-            setStatus("live");
-          } catch {
-            if (!cancelled) setStatus("error");
-          }
-        },
-        (err) => {
-          if (!cancelled) setStatus(err.code === err.PERMISSION_DENIED ? "denied" : "error");
-        },
-        {maximumAge: REFRESH_MS, timeout: 15000},
-      );
+    const update = async () => {
+      try {
+        const result = await fetchWeather(latitude, longitude, controller.signal);
+        if (cancelled) return;
+        setLive(result);
+        setStatus("live");
+      } catch {
+        if (!cancelled) setStatus("error");
+      }
+    };
 
-    update();
+    void update();
     const id = setInterval(update, REFRESH_MS);
     return () => {
       cancelled = true;
       controller.abort();
       clearInterval(id);
     };
-  }, []);
+  }, [latitude, longitude]);
 
   const shownTheme = preview?.theme ?? theme;
   const weather = preview?.weather ?? weatherOverride ?? live?.weather ?? rememberedWeather ?? "clear";
@@ -160,6 +169,7 @@ export function SceneProvider({children}: {children: ReactNode}) {
         weather,
         time,
         live: live?.weather ?? null,
+        city: place?.city ?? null,
         sun: live?.sun ?? null,
         status,
         ready: now !== null,

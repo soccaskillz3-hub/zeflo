@@ -35,8 +35,8 @@ const LABELS: Record<Weather | TimeOfDay, string> = {
 };
 
 const STATUS_TEXT: Record<Exclude<SceneStatus, "live">, string> = {
-  locating: "Finding your location…",
-  denied: "Location blocked, so auto shows clear skies",
+  locating: "Checking the weather…",
+  unknown: "Location unknown, so auto shows clear skies",
   error: "Weather unavailable, so auto shows clear skies",
 };
 
@@ -171,9 +171,11 @@ function ThemeCards({theme, time, chooseTheme}: {theme: Theme; time: TimeOfDay; 
 }
 
 function SceneTab() {
-  const {live, status, time, weatherOverride, timeOverride, chooseWeather, chooseTime} = useScene();
+  const {live, city, status, time, weatherOverride, timeOverride, chooseWeather, chooseTime} = useScene();
   const weatherHint =
-    status === "live" && live ? `Auto: ${LABELS[live].toLowerCase()} at your location` : STATUS_TEXT[status === "live" ? "locating" : status];
+    status === "live" && live
+      ? `Auto: ${LABELS[live].toLowerCase()} ${city ? `in ${city}` : "near you"}`
+      : STATUS_TEXT[status === "live" ? "locating" : status];
   const timeHint = timeOverride ? `Showing ${LABELS[time].toLowerCase()}` : `Auto: ${LABELS[time].toLowerCase()}, from your clock`;
   return (
     <div className="space-y-5">

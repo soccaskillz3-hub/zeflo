@@ -44,9 +44,9 @@ export default function PrivacyPage() {
       <h2>What Zeflo doesn&apos;t keep</h2>
       <ul>
         <li>
-          <strong>Your location.</strong> If you allow it, your browser looks up the weather and sunrise and sunset times for the scene. It sends an
-          approximate location (rounded to about a kilometre) straight to the weather service, Open-Meteo. It never reaches Zeflo&apos;s servers
-          and isn&apos;t saved. If you don&apos;t allow it, the scene uses a default sky.
+          <strong>Your location.</strong> Zeflo never asks for it. To match the scene to your weather and your sunrise and sunset, it uses the
+          rough area your internet connection comes from (usually your city), which its host, Vercel, works out with every request. Your
+          browser sends those coordinates, rounded to about a kilometre, to the weather service, Open-Meteo. They aren&apos;t saved.
         </li>
         <li>
           <strong>Your conversations with an AI assistant.</strong> If you connect one, Zeflo only sees the requests it makes to your schedule,

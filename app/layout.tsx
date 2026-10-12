@@ -8,6 +8,7 @@ import { INSTALL_SCRIPT } from "./lib/install";
 import { PrefsProvider } from "./lib/prefs";
 import { RemindersSync } from "./lib/reminders";
 import { getUser } from "./lib/dal";
+import { visitorPlace } from "./lib/place";
 import { SceneProvider } from "./lib/scene";
 import { SCENE_SCRIPT } from "./lib/sceneScript";
 import { ScheduleProvider } from "./lib/schedule";
@@ -77,7 +78,7 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const user = await getUser();
+  const [user, place] = await Promise.all([getUser(), visitorPlace()]);
 
   return (
     <html
@@ -96,7 +97,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <AccountProvider account={user}>
-          <SceneProvider>
+          <SceneProvider place={place}>
             <GlassLight />
             <SoundProvider>
               {user && <SettingsSync key={`settings-${user.id}`} userId={user.id} />}

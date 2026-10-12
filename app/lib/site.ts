@@ -9,4 +9,4 @@ export const CONTACT = SUPPORT_EMAIL
   : {href: "https://github.com/soccaskillz3-hub/zeflo/issues", label: "Zeflo’s GitHub page"};
 
 // When the privacy policy and terms last changed.
-export const POLICIES_UPDATED = "October 12, 2026";
+export const POLICIES_UPDATED = "October 13, 2026";
