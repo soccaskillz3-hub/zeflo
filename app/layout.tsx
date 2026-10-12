@@ -40,12 +40,28 @@ const fraunces = Fraunces({
   subsets: ["latin"],
 });
 
+// Every current iPhone screen: CSS width and height, and pixel ratio.
+const SPLASH_SIZES = [
+  [440, 956, 3], [402, 874, 3], [420, 912, 3], [430, 932, 3], [393, 852, 3], [428, 926, 3],
+  [390, 844, 3], [375, 812, 3], [414, 896, 3], [414, 896, 2], [375, 667, 2], [320, 568, 2],
+] as const;
+
 export const metadata: Metadata = {
   title: "Zeflo",
   description: "Plan your study day and track your progress.",
   // Added to an iPhone's Home Screen, Zeflo opens as an app (see manifest.ts), with the scene
   // running up under the status bar as it does in Safari.
-  appleWebApp: {capable: true, title: "Zeflo", statusBarStyle: "black-translucent"},
+  appleWebApp: {
+    capable: true,
+    title: "Zeflo",
+    statusBarStyle: "black-translucent",
+    // Shown while the app opens (an iPhone shows white otherwise): Zeflo's icon on its night
+    // sky, one image per iPhone screen size (public/splash).
+    startupImage: SPLASH_SIZES.map(([w, h, r]) => ({
+      url: `/splash/${w * r}x${h * r}.png`,
+      media: `(device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r}) and (orientation: portrait)`,
+    })),
+  },
 };
 
 // Draw edge to edge, under the iPhone's status bar and Safari's toolbar, so the scene fills the

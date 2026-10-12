@@ -39,16 +39,31 @@ async function save(subscription: PushSubscription) {
   return !error;
 }
 
+let savedEndpoint: string | null = null;
+
+// The push service can leave a call hanging instead of failing (seen on iPhone, e.g. in the
+// simulator, which has no push service), so nothing here waits on it forever.
+const PUSH_WAIT_MS = 6000;
+const inTime = <T>(promise: Promise<T>, ms = PUSH_WAIT_MS) =>
+  Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timed out")), ms))]);
+
 async function check() {
   if (isAppleMobile() && !isInstalled()) return set({status: "install", endpoint: null});
   if (!supported()) return set({status: "unsupported", endpoint: null});
   if (Notification.permission === "denied") return set({status: "blocked", endpoint: null});
   try {
-    const registration = await navigator.serviceWorker.register("/sw.js", {scope: "/", updateViaCache: "none"});
-    const subscription = await registration.pushManager.getSubscription();
-    if (subscription && Notification.permission === "granted") {
+    const registration = await inTime(navigator.serviceWorker.register("/sw.js", {scope: "/", updateViaCache: "none"}));
+    // Without permission there's no subscription to find (and asking an iPhone for one then
+    // never answers).
+    if (Notification.permission !== "granted") return set({status: "off", endpoint: null});
+    const subscription = await inTime(registration.pushManager.getSubscription()).catch(() => null);
+    if (subscription) {
       set({status: "on", endpoint: subscription.endpoint});
-      void save(subscription);
+      // Once per launch is enough; coming back to the app only re-checks this device.
+      if (savedEndpoint !== subscription.endpoint) {
+        savedEndpoint = subscription.endpoint;
+        void save(subscription);
+      }
     } else {
       set({status: "off", endpoint: null});
     }
@@ -93,10 +108,10 @@ export async function turnOnReminders(): Promise<string | null> {
   }
   if (permission !== "granted") return "Zeflo needs permission to send notifications. Try again and choose Allow.";
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await inTime(navigator.serviceWorker.ready);
     const subscription =
-      (await registration.pushManager.getSubscription()) ??
-      (await registration.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: keyBytes(key)}));
+      (await inTime(registration.pushManager.getSubscription()).catch(() => null)) ??
+      (await inTime(registration.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: keyBytes(key)}), 15000));
     if (!(await save(subscription))) {
       await subscription.unsubscribe();
       return "Couldn't save this device. Check your connection and try again.";
@@ -110,7 +125,7 @@ export async function turnOnReminders(): Promise<string | null> {
 
 export async function turnOffReminders() {
   const registration = await navigator.serviceWorker.getRegistration();
-  const subscription = await registration?.pushManager.getSubscription();
+  const subscription = registration && (await inTime(registration.pushManager.getSubscription()).catch(() => null));
   if (subscription) {
     await createClient().from("push_subscriptions").delete().eq("endpoint", subscription.endpoint);
     await subscription.unsubscribe();

@@ -18,6 +18,12 @@ export const MoreIcon = () => (
     <circle cx="13" cy="8" r="1.4" />
   </svg>
 );
+// Safari's page menu in the address bar (iOS 26): lines of different lengths.
+const PageMenuIcon = () => (
+  <svg viewBox="0 0 16 16" className={icon} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-label="page menu">
+    <path d="M2.5 4h11M2.5 8h11M2.5 12h7" />
+  </svg>
+);
 const MenuIcon = () => (
   <svg viewBox="0 0 16 16" className={icon} fill="currentColor" aria-label="⋮">
     <circle cx="8" cy="3" r="1.4" />
@@ -56,8 +62,8 @@ export function InstallSteps({platform}: {platform: Platform}) {
     return (
       <Steps>
         <Step n={1}>
-          In Safari, tap <MoreIcon /> next to the address bar, then <span className={strong}>Share</span>. On older iPhones, tap{" "}
-          <ShareIcon /> at the bottom. In Chrome, tap <ShareIcon /> in the address bar.
+          In Safari, tap <PageMenuIcon /> in the address bar (or <MoreIcon /> beside it), then <span className={strong}>Share</span>. On older
+          iPhones, tap <ShareIcon /> at the bottom. In Chrome, tap <ShareIcon /> in the address bar.
         </Step>
         <Step n={2}>
           Scroll down and tap <span className={strong}>Add to Home Screen</span>. If it&apos;s not there, tap View More.
