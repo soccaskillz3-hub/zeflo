@@ -12,6 +12,7 @@ import {classesOn, upcomingTests, useClasses} from "../lib/classes";
 import {COMPONENTS} from "../lib/classSchedule";
 import {addDays, daysBetween, formatDay, toDate, weekStart} from "../lib/days";
 import {streaks, totalOn, useStudyHistory, useWeek} from "../lib/history";
+import {useReveal} from "../lib/useReveal";
 import {sessionMinutes, useSchedule} from "../lib/schedule";
 import {formatMinutes, formatTime, nowMinutes, toMinutes} from "../lib/time";
 
@@ -123,6 +124,7 @@ function StreakCard({today}: {today: string}) {
   const {history} = useStudyHistory();
   const streak = history && streaks(history, today);
   const fortnight = daysBetween(addDays(today, -13), today);
+  const reveal = useReveal(Boolean(streak));
 
   return (
     <Card className="flex flex-col">
@@ -130,7 +132,7 @@ function StreakCard({today}: {today: string}) {
         {streak?.best ? <span className="text-[11px] uppercase tracking-[0.25em] text-white/50 tabular-nums">Best {streak.best}</span> : null}
       </CardHead>
       {/* Kept the same size while it loads, so nothing jumps. */}
-      <div className={`mt-5 flex items-center gap-4 ${streak ? "" : "invisible"}`}>
+      <div className={`mt-5 flex items-center gap-4 ${reveal}`}>
         <Flame lit={streak?.studiedToday ?? false} className="h-10 w-10 shrink-0" />
         {streak?.current ? (
           <p className="flex items-baseline gap-3">

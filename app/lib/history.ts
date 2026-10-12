@@ -31,10 +31,14 @@ const MAX_DAYS = 1000;
 // Every day the logged-in user has planned anything, from the study_days view. Days the schedule
 // already has loaded are taken from there instead, so ticking a session off shows up here at once.
 // `history` is null until the first read finishes.
+// The last read, kept while the app is open, so a page that needs the history (Today, Progress)
+// has it the moment it opens; each still reads it again in the background. Keyed by account.
+const lastRead = new Map<string, History>();
+
 export function useStudyHistory() {
   const userId = useAccount()?.id;
   const {loadedDays, sessionsOn, completed} = useSchedule();
-  const [saved, setSaved] = useState<History | null>(null);
+  const [saved, setSaved] = useState<History | null>(() => (userId && lastRead.get(userId)) || null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -48,15 +52,19 @@ export function useStudyHistory() {
       .limit(MAX_DAYS)
       .then(({data, error}) => {
         if (!current) return;
-        if (error) return setError(true);
-        setSaved(
-          Object.fromEntries(
-            (data as Row[]).map((r) => [
-              r.day,
-              {planned: r.planned_minutes, done: r.done_minutes, sessions: r.sessions, sessionsDone: r.sessions_done},
-            ]),
-          ),
+        if (error) {
+          // Offline with an earlier read: keep showing that rather than an error.
+          if (!lastRead.has(userId)) setError(true);
+          return;
+        }
+        const read: History = Object.fromEntries(
+          (data as Row[]).map((r) => [
+            r.day,
+            {planned: r.planned_minutes, done: r.done_minutes, sessions: r.sessions, sessionsDone: r.sessions_done},
+          ]),
         );
+        lastRead.set(userId, read);
+        setSaved(read);
       });
     return () => {
       current = false;

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {usePathname} from "next/navigation";
-import {useState, type MouseEvent, type ReactNode} from "react";
+import {useEffect, useRef, useState, ViewTransition, type MouseEvent, type ReactNode} from "react";
 import MuteButton from "./MuteButton";
 import SettingsMenu from "./SettingsMenu";
 import {formatDay} from "../lib/days";
@@ -97,6 +97,7 @@ function SectionLinks({nav}: {nav: Nav}) {
               key={s.label}
               href={s.href}
               onClick={nav.open(s)}
+              prefetch
               aria-current={current ? "page" : undefined}
               className={`relative rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.22em] transition-colors lg:px-5 ${
                 current ? "text-scene-ink" : "text-white/65 hover:text-white"
@@ -125,6 +126,7 @@ function TabBar({nav}: {nav: Nav}) {
               key={s.label}
               href={s.phoneHref ?? s.href}
               onClick={nav.open(s)}
+              prefetch
               aria-current={current ? "page" : undefined}
               className={`relative flex flex-col items-center gap-1 rounded-2xl py-2 transition-colors ${
                 current ? "text-scene-ink" : "text-white/60"
@@ -137,6 +139,31 @@ function TabBar({nav}: {nav: Nav}) {
         })}
       </div>
     </nav>
+  );
+}
+
+// Moving between sections crossfades the whole screen (::view-transition-*(root) in
+// globals.css), from the old page straight to the new one: the section links are prefetched in
+// full, so the new page is usually ready the moment it's tapped, and the old one stays until it
+// is (the highlight has already moved, so the tap is acknowledged). The browser fades between two still pictures of the screen, which stays smooth
+// on a phone; animating the glass cards themselves made it redraw the blur behind every card on
+// every frame. This invisible marker, keyed by the address, is what asks React for the
+// transition: React only starts one when a <ViewTransition> comes or goes. (Naming the page
+// itself would animate it on its own layer, where glass can't see the scene behind it.)
+function PageChange({path}: {path: string}) {
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    // From the first move on, the crossfade replaces the cards' own entrance (.sf-in).
+    if ("startViewTransition" in document) document.documentElement.dataset.navigated = "";
+  }, [path]);
+  return (
+    <ViewTransition key={path}>
+      <span aria-hidden className="pointer-events-none fixed left-0 top-0 h-px w-px opacity-0" />
+    </ViewTransition>
   );
 }
 
@@ -180,6 +207,7 @@ export default function AppHeader() {
         </div>
       </header>
       <TabBar nav={nav} />
+      <PageChange path={pathname} />
     </>
   );
 }

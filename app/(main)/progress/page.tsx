@@ -10,6 +10,7 @@ import {addDays, daysBetween, formatDay, isDayKey, weekStart} from "../../lib/da
 import {streaks, totalOn, useStudyHistory, useWeek, type History} from "../../lib/history";
 import {useSchedule} from "../../lib/schedule";
 import {formatMinutes} from "../../lib/time";
+import {useReveal} from "../../lib/useReveal";
 
 const BAR_PX = 128;
 
@@ -19,6 +20,9 @@ export default function ProgressPage({searchParams}: PageProps<"/progress">) {
   const {week: requested} = use(searchParams);
   const {today} = useSchedule();
   const {history, error} = useStudyHistory();
+  // The history is usually already here (Today read it). When it isn't, the cards stand in place
+  // with their contents hidden, so nothing jumps when it arrives; then the contents fade in.
+  const reveal = useReveal(history !== null);
   if (!today) return null;
   const start = weekStart(isDayKey(requested) ? requested : today);
 
@@ -28,25 +32,23 @@ export default function ProgressPage({searchParams}: PageProps<"/progress">) {
         <Card className="sm:col-span-2">
           <p className="text-sm text-white/75">Couldn&apos;t load your study history. Check your connection and reload the page.</p>
         </Card>
-      ) : history ? (
+      ) : (
         <>
-          <StreakCards history={history} today={today} />
-          <Card className="sm:col-span-2">
+          <StreakCards history={history ?? {}} today={today} reveal={reveal} />
+          <Card className="sm:col-span-2" aria-busy={!history}>
             <CardHead label="Last six months" />
-            <div className="mt-5">
-              <StudyHeatmap history={history} today={today} />
+            <div className={`mt-5 ${reveal}`}>
+              <StudyHeatmap history={history ?? {}} today={today} />
             </div>
           </Card>
         </>
-      ) : (
-        <div className="h-72 sm:col-span-2" aria-busy />
       )}
       <WeekCard start={start} today={today} />
     </div>
   );
 }
 
-function StreakCards({history, today}: {history: History; today: string}) {
+function StreakCards({history, today, reveal}: {history: History; today: string; reveal: string}) {
   const {current, best, studiedToday} = streaks(history, today);
   const month = daysBetween(addDays(today, -29), today).map((d) => totalOn(history, d));
   const monthDays = month.filter((t) => t.done > 0).length;
@@ -64,7 +66,7 @@ function StreakCards({history, today}: {history: History; today: string}) {
     <>
       <Card>
         <CardHead label="Streak" />
-        <div className="mt-5 flex flex-wrap items-end gap-x-4 gap-y-2">
+        <div className={`mt-5 flex min-h-18 flex-wrap items-end gap-x-4 gap-y-2 ${reveal}`}>
           {current ? (
             <>
               <p className="flex items-center gap-3">
@@ -84,16 +86,16 @@ function StreakCards({history, today}: {history: History; today: string}) {
             </p>
           )}
         </div>
-        <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/55">{nudge}</p>
+        <p className={`mt-4 text-[11px] uppercase tracking-[0.25em] text-white/55 ${reveal}`}>{nudge}</p>
       </Card>
 
       <Card>
         <CardHead label="Last 30 days" />
-        <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <div className={`mt-5 flex min-h-18 flex-wrap items-baseline gap-x-3 gap-y-1 ${reveal}`}>
           <p className="sf-serif text-7xl leading-none tabular-nums">{monthDays}</p>
           <p className="text-sm text-scene-soft">{monthDays === 1 ? "day" : "days"} studied</p>
         </div>
-        <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/55">
+        <p className={`mt-4 text-[11px] uppercase tracking-[0.25em] text-white/55 ${reveal}`}>
           {monthMinutes > 0 ? `${formatMinutes(monthMinutes)} in all` : "Nothing yet this month"}
         </p>
       </Card>
@@ -106,6 +108,7 @@ function WeekCard({start, today}: {start: string; today: string}) {
   const swipeArea = useRef<HTMLElement>(null);
   const thisWeek = start === weekStart(today);
   const subjectScale = Math.max(...subjects.map((t) => t.planned), 1);
+  const reveal = useReveal(loaded);
 
   return (
     <section ref={swipeArea} className="sf-card sf-in min-w-0 p-5 sm:col-span-2 sm:p-6">
@@ -125,7 +128,7 @@ function WeekCard({start, today}: {start: string; today: string}) {
         />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+      <div className={`mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 ${reveal}`}>
         <p className="sf-serif text-6xl leading-none tabular-nums">{loaded ? formatMinutes(done) : " "}</p>
         <p className="text-sm text-scene-soft tabular-nums">
           {loaded &&
@@ -135,12 +138,12 @@ function WeekCard({start, today}: {start: string; today: string}) {
         </p>
       </div>
 
-      <div className="mt-8">
+      <div className={`mt-8 ${reveal}`}>
         <WeekBars totals={totals} today={today} height={BAR_PX} />
       </div>
 
       {subjects.length > 0 && (
-        <div className="mt-8 border-t border-white/10 pt-6">
+        <div className={`mt-8 border-t border-white/10 pt-6 ${reveal}`}>
           <h3 className="text-[11px] uppercase tracking-[0.3em] text-white/60">By subject</h3>
           <ul className="mt-5 space-y-5">
             {subjects.map((t) => (
