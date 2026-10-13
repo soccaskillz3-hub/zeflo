@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import {continueLabel} from "./StartButton";
+import {continueHref, continueLabel} from "./StartButton";
 import {useSchedule} from "../lib/schedule";
 import {useSavedTimer} from "../lib/timer";
 
-// Under the header on every page while a study timer is going in this browser: what's being
-// studied and the time left, one tap from the timer. So popping out to check the calendar (or
-// anything else) never loses the way back.
+// Under the header on every page while a study timer (or a session's clock) is going in this
+// browser: what's being studied and the time left, one tap from it. So popping out to check the
+// calendar (or anything else) never loses the way back.
 export default function StudyingNow() {
   const saved = useSavedTimer();
   const {sessions, completed} = useSchedule();
@@ -15,10 +15,10 @@ export default function StudyingNow() {
   // Only a session still on today's schedule and not yet done (it may have been removed or ticked off).
   if (!saved || !session || completed.includes(session.id)) return null;
 
-  const counting = saved.phase === "focus" || saved.phase === "break";
+  const counting = saved.phase === "focus" || saved.phase === "break" || saved.phase === "clock";
   return (
     <Link
-      href={`/focus/${session.id}`}
+      href={continueHref(saved)}
       className="sf-card sf-press mt-5 flex items-center gap-3 rounded-full py-2 pl-4 pr-2 transition hover:brightness-110"
     >
       <span

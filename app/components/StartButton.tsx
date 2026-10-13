@@ -56,7 +56,14 @@ function ClockPreview() {
 
 // What a "Continue" button says about a timer already going: the full version, or a short one for
 // the small buttons on calendar blocks.
+// Where Continue goes: back to whichever the session was opened with.
+export const continueHref = (t: SavedTimer) => (t.phase === "clock" ? `/clock?session=${t.sessionId}` : `/focus/${t.sessionId}`);
+
 export function continueLabel(t: SavedTimer, compact = false) {
+  if (t.phase === "clock") {
+    const left = formatMinutes(Math.max(1, Math.ceil(t.focusLeftMs / 60_000)));
+    return compact ? `Continue ${left}` : `Continue · ${left} left`;
+  }
   if (t.phase === "complete") return compact ? "Finish" : "Continue · time's up";
   if (t.phase === "break") return compact ? `Break ${countdown(t.breakLeftMs)}` : `Continue · on break, ${countdown(t.breakLeftMs)}`;
   const left = countdown(t.focusLeftMs);
@@ -70,8 +77,8 @@ const choiceButton =
 // "Start?" for a session. Opens the study timer or the clock, whichever the person has made
 // their default (Settings → Focus), or asks which one. The first time they pick, it also asks
 // once whether to remember that choice; either answer means it's never asked again.
-// If this session's study timer is already going in this browser, it says "Continue" with the time
-// left instead, and goes straight back to the timer.
+// If this session's study timer (or clock) is already going in this browser, it says "Continue"
+// with the time left instead, and goes straight back to it.
 export default function StartButton({
   session,
   className,
@@ -89,7 +96,7 @@ export default function StartButton({
 
   if (saved?.sessionId === session.id) {
     return (
-      <Link href={`/focus/${session.id}`} className={`${className} tabular-nums`}>
+      <Link href={continueHref(saved)} className={`${className} tabular-nums`}>
         {continueLabel(saved, compact)}
       </Link>
     );

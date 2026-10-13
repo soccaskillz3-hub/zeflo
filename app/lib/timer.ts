@@ -60,17 +60,51 @@ export function countdown(ms: number) {
   return h > 0 ? `${h}:${pad(m)}:${pad(total % 60)}` : `${pad(m)}:${pad(total % 60)}`;
 }
 
-export type SavedTimer = {sessionId: string; phase: Phase; focusLeftMs: number; breakLeftMs: number};
+// A session opened with the clock instead: no timer to keep, just which session it was and when
+// it's over, so "Continue" can lead back to the clock until then.
+type ClockState = {sessionId: string; until: number};
+const CLOCK_KEY = "studyflow:clock-session";
 
-// The timer left running in this browser (any page), kept up to date each second, or null.
+function loadClock(): ClockState | null {
+  try {
+    return JSON.parse(localStorage.getItem(CLOCK_KEY) ?? "null");
+  } catch {
+    return null;
+  }
+}
+
+export function rememberClock(sessionId: string, until: number) {
+  try {
+    localStorage.setItem(CLOCK_KEY, JSON.stringify({sessionId, until}));
+  } catch {
+    // Not remembered: Start? just shows again.
+  }
+  window.dispatchEvent(new Event(CHANGED));
+}
+
+export function forgetClock() {
+  try {
+    localStorage.removeItem(CLOCK_KEY);
+  } catch {
+    // Nothing to forget.
+  }
+  window.dispatchEvent(new Event(CHANGED));
+}
+
+// "clock": the session is open in the clock, and focusLeftMs is the time until it ends.
+export type SavedTimer = {sessionId: string; phase: Phase | "clock"; focusLeftMs: number; breakLeftMs: number};
+
+// The timer (or clock) left going in this browser (any page), kept up to date each second, or null.
 // For "Continue" buttons: it never starts, changes or clears a timer.
 export function useSavedTimer(): SavedTimer | null {
   const [state, setState] = useState<TimerState | null>(null);
+  const [clock, setClock] = useState<ClockState | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const read = () => {
       setState(load());
+      setClock(loadClock());
       setNow(Date.now());
     };
     read();
@@ -82,15 +116,20 @@ export function useSavedTimer(): SavedTimer | null {
     };
   }, []);
 
+  // Opening the timer forgets the clock, so a clock still remembered is the newer of the two,
+  // unless it's the same session (then the timer says more).
+  const clockOpen = clock !== null && now < clock.until && clock.sessionId !== state?.sessionId;
+
   // Tick only while something is counting down; a paused timer doesn't change.
   const status = state ? statusAt(state, now) : null;
-  const counting = status?.phase === "focus" || status?.phase === "break";
+  const counting = clockOpen || status?.phase === "focus" || status?.phase === "break";
   useEffect(() => {
     if (!counting) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [counting]);
 
+  if (clockOpen) return {sessionId: clock.sessionId, phase: "clock", focusLeftMs: clock.until - now, breakLeftMs: 0};
   return state && status ? {sessionId: state.sessionId, ...status} : null;
 }
 
@@ -104,6 +143,7 @@ export function useFocusTimer(sessionId: string | null, minutes: number) {
   // Start or resume once the session is known.
   useEffect(() => {
     if (!sessionId || minutes <= 0) return;
+    forgetClock(); // studying with the timer now, so Continue should lead here
     const saved = load();
     const next: TimerState =
       saved?.sessionId === sessionId

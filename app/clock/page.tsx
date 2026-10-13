@@ -12,6 +12,7 @@ import {useScene} from "../lib/scene";
 import {sessionMinutes, useSchedule} from "../lib/schedule";
 import {success} from "../lib/audio/sfx";
 import {formatTime, nowMinutes, toMinutes} from "../lib/time";
+import {forgetClock, rememberClock} from "../lib/timer";
 import {useSwipe} from "../lib/useSwipe";
 
 const IDLE_MS = 4000;
@@ -196,6 +197,18 @@ export default function ClockPage({searchParams}: PageProps<"/clock">) {
     router.prefetch("/");
   }, [router]);
 
+  // Remember the session is open here until it ends, so its Start? (and the pill under the
+  // header) say Continue and lead back to the clock.
+  const openId = session && !completed.includes(session.id) ? session.id : null;
+  const openEnd = session?.end;
+  useEffect(() => {
+    if (!openId || !openEnd) return;
+    const [h, m] = openEnd.split(":").map(Number);
+    const now = new Date();
+    const until = new Date(now).setHours(h, m, 0, 0);
+    if (until > now.getTime()) rememberClock(openId, until);
+  }, [openId, openEnd]);
+
   const onPointerDown = (e: ReactPointerEvent) => {
     if (e.button !== 0 || (e.target as HTMLElement).closest("button, a")) return;
     stage.current?.setPointerCapture(e.pointerId);
@@ -222,6 +235,7 @@ export default function ClockPage({searchParams}: PageProps<"/clock">) {
   const finish = () => {
     if (!session || leaving) return;
     success();
+    forgetClock();
     if (!completed.includes(session.id)) {
       toggle(session.id);
       stashCelebration({subject: session.subject, minutes: sessionMinutes(session)});

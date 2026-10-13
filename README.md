@@ -4,7 +4,7 @@
 
 Zeflo is a calm study planner for students. Bring in your class timetable, plan study sessions around it (or ask your own AI to plan them for you), run a full-screen focus timer or clock for each one, and watch your streak and progress fill in — all on panes of liquid glass over a living scene, an ocean or a forest, that follows the real weather and time of day where you are, with sound to match.
 
-**Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.6.0
+**Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.6.1
 
 <p>
   <img src="docs/screenshots/forest-day.jpg" alt="Today in the forest on a clear day: time studied, what's next with a Start button, and today's classes" width="49%">
