@@ -1,43 +1,89 @@
 "use client";
 
-import {useEffect, useId, useRef, useState, type KeyboardEvent} from "react";
+import {useEffect, useId, useLayoutEffect, useRef, useState} from "react";
 import {formatTime, fromParts, toParts} from "../lib/time";
 
 const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-const MINUTE_STEP = 5;
+const MINUTE_STEP = 15;
+const ROW = 36; // px per row; the column shows five, with the picked one in the middle
+const COPIES = 9; // looping columns repeat their values, and quietly re-center when you stop
 
-type Option = {key: string; label: string; selected: boolean; pick: () => void};
+// One wheel of choices, like a phone's: it snaps a row at a time, and the hours and minutes loop
+// forever. The row in the middle is the pick; click a row to bring it there. Arrow keys step.
+function Wheel({label, labels, index, onIndex, loop = false, className = ""}: {label: string; labels: string[]; index: number; onIndex: (i: number) => void; loop?: boolean; className?: string}) {
+  const n = labels.length;
+  const ref = useRef<HTMLDivElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const placed = useRef(false);
+  const [live, setLive] = useState(index);
+  const copies = loop ? COPIES : 1;
+  const mid = loop ? Math.floor(COPIES / 2) : 0;
 
-// One scrolling column of choices. Arrow keys move focus; Enter or Space picks.
-function Column({label, options, className = ""}: {label: string; options: Option[]; className?: string}) {
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
-    e.preventDefault();
-    const items = [...e.currentTarget.querySelectorAll<HTMLButtonElement>("[role=option]")];
-    const i = items.indexOf(document.activeElement as HTMLButtonElement);
-    const next = items[Math.min(Math.max(i + (e.key === "ArrowDown" ? 1 : -1), 0), items.length - 1)];
-    next?.focus();
+  // Put the pick in the middle on open, and again if it's changed from outside.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!placed.current || (Math.round(el.scrollTop / ROW) % n + n) % n !== index) {
+      el.scrollTop = (mid * n + index) * ROW;
+      placed.current = true;
+    }
+    setLive(index);
+  }, [index, n, mid]);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const onScroll = () => {
+    const el = ref.current;
+    if (!el) return;
+    const i = Math.round(el.scrollTop / ROW);
+    const v = ((i % n) + n) % n;
+    setLive(v);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      // Stopped: step back to the middle copy (same row, so nothing visibly moves).
+      if (loop && (i < n * 2 || i >= n * copies - n * 2)) el.scrollTop = (mid * n + v) * ROW;
+      if (v !== index) onIndex(v);
+    }, 90);
+  };
+
+  const step = (by: number) => {
+    const el = ref.current;
+    if (el) el.scrollTo({top: (Math.round(el.scrollTop / ROW) + by) * ROW, behavior: "smooth"});
   };
 
   return (
-    <div role="listbox" aria-label={label} onKeyDown={onKeyDown} className={`sf-picker-col relative h-52 overflow-y-auto py-[5.5rem] ${className}`}>
-      {options.map((o) => (
-        <button
-          key={o.key}
-          type="button"
-          role="option"
-          aria-selected={o.selected}
-          tabIndex={o.selected ? 0 : -1}
-          onClick={o.pick}
-          className={`block w-full rounded-md py-1.5 text-center text-sm tabular-nums outline-none transition focus-visible:ring-1 focus-visible:ring-white/60 ${
-            o.selected
-              ? "sf-panel-active text-white"
-              : "text-white/65 hover:bg-white/[0.06] hover:text-white"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div className={`relative ${className}`}>
+      <div className="sf-panel-active pointer-events-none absolute inset-x-0 rounded-md" style={{top: ROW * 2, height: ROW}} aria-hidden />
+      <div
+        ref={ref}
+        role="listbox"
+        aria-label={label}
+        tabIndex={0}
+        onScroll={onScroll}
+        onKeyDown={(e) => {
+          if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+          e.preventDefault();
+          step(e.key === "ArrowDown" ? 1 : -1);
+        }}
+        className="sf-picker-col relative overflow-y-auto overscroll-contain rounded-md outline-none focus-visible:ring-1 focus-visible:ring-white/50"
+        style={{height: ROW * 5, paddingBlock: ROW * 2, scrollSnapType: "y mandatory", touchAction: "pan-y"}}
+      >
+        {Array.from({length: n * copies}, (_, i) => {
+          const v = i % n;
+          return (
+            <div
+              key={i}
+              role="option"
+              aria-selected={v === live}
+              onClick={() => step(i - Math.round((ref.current?.scrollTop ?? 0) / ROW))}
+              className={`flex cursor-pointer items-center justify-center text-sm tabular-nums transition-colors ${v === live ? "text-white" : "text-white/50 hover:text-white/80"}`}
+              style={{height: ROW, scrollSnapAlign: "center"}}
+            >
+              {labels[v]}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -76,12 +122,7 @@ export default function TimePicker({value, onChange, label, placeholder = "Pick 
   useEffect(() => {
     if (!open) return;
     const panel = root.current;
-    // Center each column on its selected value and put focus on the hour.
-    panel?.querySelectorAll<HTMLElement>("[role=listbox]").forEach((col) => {
-      const sel = col.querySelector<HTMLElement>("[aria-selected=true]");
-      if (sel) col.scrollTop = sel.offsetTop - col.clientHeight / 2 + sel.offsetHeight / 2;
-    });
-    panel?.querySelector<HTMLElement>("[role=listbox] [aria-selected=true]")?.focus({preventScroll: true});
+    panel?.querySelector<HTMLElement>("[role=listbox]")?.focus({preventScroll: true});
 
     const onPointerDown = (e: PointerEvent) => {
       if (!panel?.contains(e.target as Node)) setOpen(false);
@@ -145,35 +186,28 @@ export default function TimePicker({value, onChange, label, placeholder = "Pick 
           } ${openUp ? (align === "right" ? "origin-bottom-right" : "origin-bottom-left") : align === "right" ? "origin-top-right" : "origin-top-left"}`}
         >
           <div className="flex gap-1">
-            <Column
+            <Wheel
               label="Hour"
               className="flex-1"
-              options={HOURS.map((h) => ({
-                key: `h${h}`,
-                label: String(h),
-                selected: h === hour12,
-                pick: () => onChange(fromParts(h, minute, pm)),
-              }))}
+              loop
+              labels={HOURS.map(String)}
+              index={HOURS.indexOf(hour12)}
+              onIndex={(i) => onChange(fromParts(HOURS[i], minute, pm))}
             />
-            <Column
+            <Wheel
               label="Minute"
               className="flex-1"
-              options={minutes.map((m) => ({
-                key: `m${m}`,
-                label: String(m).padStart(2, "0"),
-                selected: m === minute,
-                pick: () => onChange(fromParts(hour12, m, pm)),
-              }))}
+              loop
+              labels={minutes.map((m) => String(m).padStart(2, "0"))}
+              index={minutes.indexOf(minute)}
+              onIndex={(i) => onChange(fromParts(hour12, minutes[i], pm))}
             />
-            <Column
+            <Wheel
               label="AM or PM"
               className="w-14 shrink-0"
-              options={[false, true].map((isPm) => ({
-                key: isPm ? "pm" : "am",
-                label: isPm ? "PM" : "AM",
-                selected: isPm === pm,
-                pick: () => onChange(fromParts(hour12, minute, isPm)),
-              }))}
+              labels={["AM", "PM"]}
+              index={pm ? 1 : 0}
+              onIndex={(i) => onChange(fromParts(hour12, minute, i === 1))}
             />
           </div>
           <div className="mt-2 flex items-center justify-between border-t border-dashed border-white/15 px-1 pt-2">

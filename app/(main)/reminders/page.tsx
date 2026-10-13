@@ -123,8 +123,8 @@ function AddForm({onAdd}: {onAdd: (title: string, dueAt: Date) => void}) {
     setError("");
   };
 
-  // The pickers start on the next five minutes, today.
-  const suggestion = fromMinutes(Math.ceil((nowMinutes() + 1) / 5) * 5);
+  // The pickers start on the next quarter hour, today.
+  const suggestion = fromMinutes(Math.ceil((nowMinutes() + 1) / 15) * 15);
   const input =
     "border-b border-white/30 bg-transparent px-1 py-2 text-white placeholder:text-white/45 outline-none transition focus:border-scene [color-scheme:dark]";
 
