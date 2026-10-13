@@ -25,6 +25,7 @@ const LOCAL_KEYS = [
   "studyflow:theme",
   "studyflow:weather-override",
   "studyflow:time-override",
+  "studyflow:still-scene",
   "studyflow:sound-v2",
   "studyflow:scene",
 ];

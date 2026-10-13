@@ -654,9 +654,11 @@ dialog.sf-pop::backdrop { animation: sf-fade-only 200ms ease both; }
   animation: sf-twinkle ease-in-out infinite alternate;
 }
 
+/* Twinkling by fading around each star's own brightness (--o), not by animating a filter:
+   opacity is drawn by the GPU, while a changing filter repaints the star every frame. */
 @keyframes sf-twinkle {
-  from { transform: scale(1); filter: brightness(0.6); }
-  to   { transform: scale(1.15); filter: brightness(1.4); }
+  from { transform: scale(1); opacity: calc(var(--o, 0.6) * 0.55); }
+  to   { transform: scale(1.15); opacity: min(1, calc(var(--o, 0.6) * 1.35)); }
 }
 
 /* Sun and moon glide to each time of day's position; the inactive one fades out.
@@ -844,20 +846,29 @@ dialog.sf-pop::backdrop { animation: sf-fade-only 200ms ease both; }
   100% { opacity: 0.6;  transform: translateX(50%) scaleX(0.95); }
 }
 
+/* The glints are a wavy line repeated along an inner strip that slides one tile (--tile) per
+   cycle: moving the strip is GPU work, while sliding a background inside it repainted it every frame. */
 .sf-ripple {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='10' viewBox='0 0 240 10'%3E%3Cpath d='M0 5 Q30 1 60 5 T120 5 T180 5 T240 5' fill='none' stroke='%23cbd5e1' stroke-width='1'/%3E%3C/svg%3E");
-  background-repeat: repeat-x;
+  overflow: hidden;
   /* Static, uneven mask over a moving wave: reads as scattered glints, not ruled lines. */
   mask-image:
     repeating-linear-gradient(to right, transparent 0 40px, #000 90px 150px, transparent 210px 330px, #000 380px 420px, transparent 470px 560px),
     linear-gradient(to right, transparent, #000 20%, #000 80%, transparent);
   mask-composite: intersect;
+}
+.sf-ripple-strip {
+  position: absolute;
+  inset: 0 0 0 calc(var(--tile) * -1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='10' viewBox='0 0 240 10'%3E%3Cpath d='M0 5 Q30 1 60 5 T120 5 T180 5 T240 5' fill='none' stroke='%23cbd5e1' stroke-width='1'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: var(--tile) 100%;
   animation: sf-flow linear infinite;
+  animation-duration: inherit;
 }
 
 @keyframes sf-flow {
-  from { background-position-x: 0; }
-  to   { background-position-x: 240px; }
+  from { translate: 0 0; }
+  to   { translate: var(--tile) 0; }
 }
 
 .sf-water-veil {
@@ -892,8 +903,15 @@ dialog.sf-pop::backdrop { animation: sf-fade-only 200ms ease both; }
   to   { opacity: 1; }
 }
 
-/* Rain: tiled slanted streaks, scrolled diagonally. Near layers are larger, faster and brighter. */
+/* Rain: tiled slanted streaks on a sheet one tile bigger than the screen, slid diagonally by one
+   tile per cycle (moving the sheet is GPU work; scrolling its background repainted the whole
+   screen every frame). Near layers are larger, faster and brighter. */
 .sf-rain {
+  position: absolute;
+  left: 0;
+  top: calc(var(--rain-dy) * -1);
+  width: calc(100% - var(--rain-dx));
+  height: calc(100% + var(--rain-dy));
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400'%3E%3Cg stroke='%23cbd5e1' stroke-linecap='round'%3E%3Cpath d='M101 56 l-4.8 22' stroke-opacity='0.4'/%3E%3Cpath d='M160 135 l-2.4 11' stroke-opacity='0.68'/%3E%3Cpath d='M20 160 l-2.5 11' stroke-opacity='0.41'/%3E%3Cpath d='M129 306 l-2.7 12' stroke-opacity='0.5'/%3E%3Cpath d='M186 351 l-4.5 20' stroke-opacity='0.61'/%3E%3Cpath d='M283 17 l-5.6 25' stroke-opacity='0.54'/%3E%3Cpath d='M50 44 l-3.4 16' stroke-opacity='0.88'/%3E%3Cpath d='M61 215 l-4.7 22' stroke-opacity='0.59'/%3E%3Cpath d='M163 23 l-2.4 11' stroke-opacity='0.48'/%3E%3Cpath d='M201 158 l-3.4 16' stroke-opacity='0.73'/%3E%3Cpath d='M137 111 l-5.3 24' stroke-opacity='0.8'/%3E%3Cpath d='M78 213 l-4.3 19' stroke-opacity='0.92'/%3E%3Cpath d='M214 107 l-6.1 28' stroke-opacity='0.43'/%3E%3Cpath d='M127 280 l-2.8 13' stroke-opacity='0.67'/%3E%3Cpath d='M21 247 l-5.2 24' stroke-opacity='0.72'/%3E%3Cpath d='M255 116 l-5.0 23' stroke-opacity='0.74'/%3E%3Cpath d='M172 169 l-5.5 25' stroke-opacity='0.96'/%3E%3Cpath d='M143 246 l-2.4 11' stroke-opacity='0.81'/%3E%3Cpath d='M191 367 l-5.5 25' stroke-opacity='0.53'/%3E%3Cpath d='M118 247 l-2.3 10' stroke-opacity='0.65'/%3E%3Cpath d='M57 43 l-2.4 11' stroke-opacity='0.85'/%3E%3Cpath d='M46 92 l-3.7 17' stroke-opacity='0.92'/%3E%3C/g%3E%3C/svg%3E");
   animation: sf-fall-rain linear infinite;
 }
@@ -920,8 +938,8 @@ dialog.sf-pop::backdrop { animation: sf-fade-only 200ms ease both; }
 }
 
 @keyframes sf-fall-rain {
-  from { background-position: 0 0; }
-  to   { background-position: var(--rain-dx) var(--rain-dy); }
+  from { translate: 0 0; }
+  to   { translate: var(--rain-dx) var(--rain-dy); }
 }
 
 /* Distant lightning: a brief double flicker lighting the clouds every ~12s. */
@@ -944,6 +962,9 @@ dialog.sf-pop::backdrop { animation: sf-fade-only 200ms ease both; }
 
 .sf-flake {
   animation: sf-snowfall linear infinite;
+}
+.sf-flake-soft {
+  background: radial-gradient(circle closest-side, rgb(241 245 249) 40%, rgb(241 245 249 / 0));
 }
 
 @keyframes sf-snowfall {
@@ -1253,21 +1274,17 @@ dialog.sf-pop::backdrop { animation: sf-fade-only 200ms ease both; }
   transform-origin: 50% 0;
   animation: sf-canopy-sway 12s ease-in-out infinite alternate;
 }
+/* A slow slide. (A lean as well, via skew, was tried: it cost a tenth of the GPU for
+   something barely visible.) */
 @keyframes sf-canopy-sway {
-  from { translate: -0.4% 0; skew: -0.4deg 0; }
-  to   { translate: 0.4% 0; skew: 0.4deg 0; }
+  from { translate: -0.4% 0; }
+  to   { translate: 0.4% 0; }
 }
 .sf-undergrowth {
   height: clamp(70px, 15vh, 160px);
   fill: var(--tree-1);
   overflow: visible;
   transform-origin: 50% 100%;
-  animation: sf-sway 5s ease-in-out infinite alternate;
-}
-.sf-undergrowth-1 { animation-duration: 6.5s; animation-delay: -2s; }
-@keyframes sf-sway {
-  from { skew: -1.4deg 0; }
-  to   { skew: 1.4deg 0; }
 }
 
 .sf-firefly {
@@ -2258,4 +2275,37 @@ html:has(.wl-story) {
   .wl-live-dot::after,
   .wl-cue-line::after { animation: none; }
   .wl-sky-steps span[data-state="now"]::after { animation: none; transform: none; }
+}
+
+/* ---------- Studying now ----------
+   The dot on the "Continue" pill under the header breathes while the timer counts down.
+   Opacity only, so it costs next to nothing. */
+.sf-live-dot {
+  box-shadow: 0 0 8px var(--accent-glow);
+  animation: sf-live-dot 2.4s ease-in-out infinite;
+}
+@keyframes sf-live-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-live-dot { animation: none; }
+}
+
+/* ---------- Still scene ----------
+   Settings → Theme → Still scene (lib/stillScene.ts): the scene keeps its look but stops moving,
+   which takes it from a third of a CPU core to almost nothing. Falling snow and rain would hang
+   frozen in mid-air, so they go (the sky stays as dark as the weather makes it), and so do the
+   animals that wander through. */
+:root[data-still] .sf-backdrop *,
+:root[data-still] .sf-backdrop *::before,
+:root[data-still] .sf-backdrop *::after {
+  animation-play-state: paused !important;
+}
+:root[data-still] .sf-flake,
+:root[data-still] .sf-rain,
+:root[data-still] .sf-mote,
+:root[data-still] .sf-lightning,
+:root[data-still] .sf-wildlife {
+  display: none;
 }

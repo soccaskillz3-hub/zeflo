@@ -5,6 +5,7 @@ import {usePathname} from "next/navigation";
 import {useEffect, useRef, useState, ViewTransition, type MouseEvent, type ReactNode} from "react";
 import MuteButton from "./MuteButton";
 import SettingsMenu from "./SettingsMenu";
+import StudyingNow from "./StudyingNow";
 import {formatDay} from "../lib/days";
 import {useSchedule} from "../lib/schedule";
 import {useSlidingPill} from "../lib/useSlidingPill";
@@ -206,6 +207,7 @@ export default function AppHeader() {
           <SettingsMenu />
         </div>
       </header>
+      <StudyingNow />
       <TabBar nav={nav} />
       <PageChange path={pathname} />
     </>

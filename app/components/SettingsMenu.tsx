@@ -14,6 +14,7 @@ import {formatDay} from "../lib/days";
 import {isPhone, useInstall} from "../lib/install";
 import {CLOCK_STYLES, START_MODES, usePrefs, type StartMode} from "../lib/prefs";
 import {useScene, type SceneStatus} from "../lib/scene";
+import {readStill, setStill} from "../lib/stillScene";
 import {useSound} from "../lib/sound";
 import {THEMES, type Theme} from "../lib/themes";
 import {useReminders} from "../lib/reminders";
@@ -110,6 +111,34 @@ function ThemePreview({theme, time}: {theme: Theme; time: TimeOfDay}) {
   );
 }
 
+// Pauses the scene's motion on this device (see lib/stillScene.ts).
+function StillSceneSwitch() {
+  const [still, setStillState] = useState(readStill);
+  return (
+    <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-white/[0.04] px-3 py-2.5">
+      <span>
+        <span className="block text-xs uppercase tracking-[0.25em] text-white">Still scene</span>
+        <span className="mt-1 block text-[11px] leading-snug text-white/55">
+          Stops the scene moving, to save battery and keep slower computers cool. Just on this device.
+        </span>
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={still}
+        aria-label="Still scene"
+        onClick={() => {
+          setStill(!still);
+          setStillState(!still);
+        }}
+        className={`relative h-6 w-11 shrink-0 rounded-full transition ${still ? "bg-scene/80" : "bg-white/15"}`}
+      >
+        <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${still ? "left-6" : "left-1"}`} />
+      </button>
+    </div>
+  );
+}
+
 // Theme cards, with the scene (weather and time of day) in a dropdown underneath.
 function ThemeTab() {
   const {theme, time, weather, weatherOverride, timeOverride, chooseTheme} = useScene();
@@ -142,6 +171,7 @@ function ThemeTab() {
           </div>
         )}
       </div>
+      <StillSceneSwitch />
     </div>
   );
 }

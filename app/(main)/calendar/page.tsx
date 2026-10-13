@@ -12,6 +12,7 @@ import {dayEntries, hourRange, layoutBlocks, onTimeline} from "../../lib/dayLayo
 import {addDays, formatDay, isDayKey} from "../../lib/days";
 import {useSchedule} from "../../lib/schedule";
 import {formatHour, formatMinutes, formatTime, fromMinutes, nowMinutes, toMinutes} from "../../lib/time";
+import {useSavedTimer} from "../../lib/timer";
 
 const HOUR_PX = 72;
 const PX_PER_MIN = HOUR_PX / 60;
@@ -182,6 +183,7 @@ function BlockComposer({
 function DayView({day, isToday}: {day: string; isToday: boolean}) {
   const swipeArea = useRef<HTMLElement>(null);
   const {sessionsOn, isLoaded, loadDays, completed, toggle, removeSession} = useSchedule();
+  const running = useSavedTimer(); // a study timer left going, whose block says "Continue"
   const {classes} = useClasses();
   // The current time, for today only. Null until mounted: the server doesn't know the visitor's local time.
   const [clock, setClock] = useState<number | null>(null);
@@ -543,7 +545,7 @@ function DayView({day, isToday}: {day: string; isToday: boolean}) {
                         aria-label={`${session.subject}, ${formatTime(session.start)} to ${formatTime(session.end)}${done ? ", done" : ""}`}
                         className={`relative flex h-full w-full min-w-0 px-2.5 text-left ${
                           compact ? "items-center gap-2 py-0.5" : "flex-col py-1.5"
-                        } ${canStart ? "pr-[6.5rem]" : "pr-9"}`}
+                        } ${canStart ? (running?.sessionId === session.id ? "pr-[9.5rem]" : "pr-[6.5rem]") : "pr-9"}`}
                       >
                         <span
                           className={`block truncate text-sm ${
@@ -573,6 +575,7 @@ function DayView({day, isToday}: {day: string; isToday: boolean}) {
                       {canStart && (
                         <StartButton
                           session={session}
+                          compact
                           className={`absolute right-8 rounded border border-scene/60 bg-slate-950/75 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-scene-ink transition hover:bg-scene/20 ${
                             compact ? "top-1/2 -translate-y-1/2" : "top-1.5"
                           }`}

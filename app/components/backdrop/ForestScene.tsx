@@ -1,4 +1,5 @@
 import type {CSSProperties} from "react";
+import FadeLayer from "./FadeLayer";
 import ForestWildlife from "./ForestWildlife";
 import Rainbow from "./Rainbow";
 import {CANOPY, NEAR, TREE_BANDS, UNDERGROWTH} from "./forestShapes";
@@ -29,7 +30,7 @@ const RAYS = Array.from({length: 8}, (_, i) => ({
 }));
 
 // Dust and pollen drifting through the light.
-const MOTES = Array.from({length: 34}, (_, i) => ({
+const MOTES = Array.from({length: 10}, (_, i) => ({
   left: 38 + rand(i, 81) * 60,
   top: 12 + rand(i, 82) * 70,
   size: 1.5 + rand(i, 83) * 2,
@@ -103,23 +104,25 @@ export default function ForestScene({weather, time, rainbow}: {weather: Weather;
         <div key={k} className={`sf-fsky-${k} absolute inset-0 ${fade}`} style={{opacity: k === time ? 1 : 0}} />
       ))}
 
-      <div className={`absolute inset-0 ${fade}`} style={{opacity: t.stars * w.stars}}>
+      <FadeLayer opacity={t.stars * w.stars}>
         {STARS.map((s, i) => (
           <span
             key={i}
             className="sf-star absolute rounded-full bg-slate-100"
-            style={{
-              left: `${s.left}%`,
-              top: `${s.top}%`,
-              width: s.size,
-              height: s.size,
-              opacity: s.opacity,
-              animationDelay: `${s.delay}s`,
-              animationDuration: `${s.duration}s`,
-            }}
+            style={
+              {
+                left: `${s.left}%`,
+                top: `${s.top}%`,
+                width: s.size,
+                height: s.size,
+                "--o": s.opacity, // the twinkle fades around this brightness (see sf-twinkle)
+                animationDelay: `${s.delay}s`,
+                animationDuration: `${s.duration}s`,
+              } as CSSProperties
+            }
           />
         ))}
-      </div>
+      </FadeLayer>
 
       {rainbow !== null && <Rainbow key={rainbow} time={time} />}
 
@@ -153,7 +156,7 @@ export default function ForestScene({weather, time, rainbow}: {weather: Weather;
         ))}
       </div>
 
-      <div className={`absolute inset-0 ${fade}`} style={{opacity: t.motes * w.motes * Math.max(rays, 0.3)}}>
+      <FadeLayer opacity={t.motes * w.motes * Math.max(rays, 0.3)}>
         {MOTES.map((m, i) => (
           <span
             key={i}
@@ -171,7 +174,7 @@ export default function ForestScene({weather, time, rainbow}: {weather: Weather;
             }
           />
         ))}
-      </div>
+      </FadeLayer>
 
       <TreeBand shape={TREE_BANDS[2]} tone={2} />
       <div className="sf-forest-floor absolute inset-x-0 bottom-0" />
@@ -214,7 +217,7 @@ export default function ForestScene({weather, time, rainbow}: {weather: Weather;
         <path d={CANOPY} />
       </svg>
 
-      <div className={`absolute inset-0 ${fade}`} style={{opacity: t.fireflies * w.fireflies}}>
+      <FadeLayer opacity={t.fireflies * w.fireflies}>
         {FIREFLIES.map((f, i) => (
           <span
             key={i}
@@ -231,7 +234,7 @@ export default function ForestScene({weather, time, rainbow}: {weather: Weather;
             }
           />
         ))}
-      </div>
+      </FadeLayer>
 
       {UNDERGROWTH.map((d, i) => (
         <svg

@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useRef, useState} from "react";
 import {usePrefs} from "../lib/prefs";
 import type {Session} from "../lib/schedule";
 import {formatMinutes, toMinutes} from "../lib/time";
+import {countdown, useSavedTimer, type SavedTimer} from "../lib/timer";
 
 type Mode = "timer" | "clock";
 
@@ -52,17 +54,46 @@ function ClockPreview() {
   );
 }
 
+// What a "Continue" button says about a timer already going: the full version, or a short one for
+// the small buttons on calendar blocks.
+export function continueLabel(t: SavedTimer, compact = false) {
+  if (t.phase === "complete") return compact ? "Finish" : "Continue · time's up";
+  if (t.phase === "break") return compact ? `Break ${countdown(t.breakLeftMs)}` : `Continue · on break, ${countdown(t.breakLeftMs)}`;
+  const left = countdown(t.focusLeftMs);
+  if (compact) return `Continue ${left}`;
+  return t.phase === "paused" ? `Continue · ${left} left, paused` : `Continue · ${left} left`;
+}
+
 const choiceButton =
   "group flex flex-col items-center rounded-xl bg-white/[0.05] p-4 text-center transition hover:bg-white/[0.1] focus-visible:bg-white/[0.1] sf-press";
 
 // "Start?" for a session. Opens the study timer or the clock, whichever the person has made
 // their default (Settings → Focus), or asks which one. The first time they pick, it also asks
 // once whether to remember that choice; either answer means it's never asked again.
-export default function StartButton({session, className}: {session: Session; className: string}) {
+// If this session's study timer is already going in this browser, it says "Continue" with the time
+// left instead, and goes straight back to the timer.
+export default function StartButton({
+  session,
+  className,
+  compact = false,
+}: {
+  session: Session;
+  className: string;
+  compact?: boolean; // the short label, for small buttons
+}) {
   const router = useRouter();
   const {prefs, setPrefs} = usePrefs();
   const dialog = useRef<HTMLDialogElement>(null);
   const [picked, setPicked] = useState<Mode | null>(null);
+  const saved = useSavedTimer();
+
+  if (saved?.sessionId === session.id) {
+    return (
+      <Link href={`/focus/${session.id}`} className={`${className} tabular-nums`}>
+        {continueLabel(saved, compact)}
+      </Link>
+    );
+  }
 
   const go = (mode: Mode) => {
     dialog.current?.close();

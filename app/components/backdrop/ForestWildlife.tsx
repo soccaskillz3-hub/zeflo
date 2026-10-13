@@ -325,7 +325,8 @@ export default function ForestWildlife({time, weather}: {time: TimeOfDay; weathe
         later(planning, between(...(first ? species.first : species.every)), () => {
           // Owls perch on limbs, which narrow or tall screens crop away.
           const fits = kind !== "owl" || window.matchMedia(LIMBS_FIT).matches;
-          if (!document.hidden && !busy.current.has(kind) && fits) visit(kind);
+          const still = document.documentElement.hasAttribute("data-still"); // Settings → Still scene: no visitors
+          if (!document.hidden && !busy.current.has(kind) && fits && !still) visit(kind);
           plan(false);
         });
       plan(true);

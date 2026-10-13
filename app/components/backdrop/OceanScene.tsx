@@ -1,3 +1,5 @@
+import type {CSSProperties} from "react";
+import FadeLayer from "./FadeLayer";
 import Rainbow from "./Rainbow";
 import {rand} from "../../lib/random";
 import type {TimeOfDay, Weather} from "../../lib/weather";
@@ -108,23 +110,25 @@ export default function OceanScene({weather, time, rainbow}: {weather: Weather; 
         <div key={k} className={`sf-sky-${k} absolute inset-0 ${fade}`} style={{opacity: k === time ? 1 : 0}} />
       ))}
 
-      <div className={`absolute inset-0 ${fade}`} style={{opacity: t.stars * w.stars}}>
+      <FadeLayer opacity={t.stars * w.stars}>
         {STARS.map((s, i) => (
           <span
             key={i}
             className="sf-star absolute rounded-full bg-slate-100"
-            style={{
-              left: `${s.left}%`,
-              top: `${s.top}%`,
-              width: s.size,
-              height: s.size,
-              opacity: s.opacity,
-              animationDelay: `${s.delay}s`,
-              animationDuration: `${s.duration}s`,
-            }}
+            style={
+              {
+                left: `${s.left}%`,
+                top: `${s.top}%`,
+                width: s.size,
+                height: s.size,
+                "--o": s.opacity, // the twinkle fades around this brightness (see sf-twinkle)
+                animationDelay: `${s.delay}s`,
+                animationDuration: `${s.duration}s`,
+              } as CSSProperties
+            }
           />
         ))}
-      </div>
+      </FadeLayer>
 
       {/* Behind cloud or fog the sun or moon becomes a soft glow rather than a dimmed disc. */}
       <div
@@ -154,7 +158,7 @@ export default function OceanScene({weather, time, rainbow}: {weather: Weather; 
         ))}
       </div>
 
-      <div className={`absolute inset-0 ${fade}`} style={{opacity: w.overcast}}>
+      <FadeLayer opacity={w.overcast}>
         {OVERCAST.map((c, i) => (
           <div
             key={i}
@@ -168,7 +172,7 @@ export default function OceanScene({weather, time, rainbow}: {weather: Weather; 
             }}
           />
         ))}
-      </div>
+      </FadeLayer>
 
       {rainbow !== null && <Rainbow key={rainbow} time={time} />}
 
@@ -200,15 +204,19 @@ export default function OceanScene({weather, time, rainbow}: {weather: Weather; 
           <div
             key={i}
             className={`sf-ripple absolute inset-x-0 ${fade}`}
-            style={{
-              bottom: `${r.bottom}%`,
-              opacity: Math.min(1, r.opacity * w.ripples),
-              animationDuration: `${r.duration / (raining ? 2 : 1)}s`,
-              backgroundSize: `${240 * r.scale}px ${10 * r.scale}px`,
-              height: `${10 * r.scale}px`,
-              maskPosition: `${i * 173}px 0, 0 0`,
-            }}
-          />
+            style={
+              {
+                bottom: `${r.bottom}%`,
+                opacity: Math.min(1, r.opacity * w.ripples),
+                animationDuration: `${r.duration / (raining ? 2 : 1)}s`, // passed on to the strip
+                height: `${10 * r.scale}px`,
+                maskPosition: `${i * 173}px 0, 0 0`,
+                "--tile": `${240 * r.scale}px`,
+              } as CSSProperties
+            }
+          >
+            <div className="sf-ripple-strip" />
+          </div>
         ))}
         <div className={`sf-water-veil absolute inset-0 ${fade}`} style={{opacity: w.veil * 0.4}} />
       </div>

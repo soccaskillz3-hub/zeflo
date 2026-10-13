@@ -33,14 +33,15 @@ function Snowfall({gradual}: {gradual: boolean}) {
       {SNOWFLAKES.map((f, i) => (
         <span
           key={i}
-          className="sf-flake absolute -top-4 rounded-full bg-slate-100"
+          // Big flakes are soft-edged circles (a gradient, not a blur filter: blurring 38 moving
+          // flakes nearly doubled the GPU work of the whole scene).
+          className={`sf-flake absolute -top-4 rounded-full ${f.size > 3 ? "sf-flake-soft" : "bg-slate-100"}`}
           style={
             {
               left: `${f.left}%`,
-              width: f.size,
-              height: f.size,
+              width: f.size > 3 ? f.size + 2 : f.size,
+              height: f.size > 3 ? f.size + 2 : f.size,
               opacity: f.opacity,
-              filter: f.size > 3 ? "blur(1px)" : undefined,
               animationDuration: `${f.duration}s`,
               // Building up: each flake starts falling from the top after its own wait.
               animationDelay: build ? `${(i / SNOWFLAKES.length) * 30 + f.delay * -0.4}s` : `${f.delay}s`,
@@ -78,10 +79,10 @@ export default function WeatherLayers({weather, gradual}: {weather: Weather; gra
       )}
 
       {raining && (
-        <div className="sf-enter absolute inset-0">
-          <div className="sf-rain sf-rain-far absolute inset-0" />
-          <div className="sf-rain sf-rain-near absolute inset-0" />
-          {weather === "storm" && <div className="sf-rain sf-rain-heavy absolute inset-0" />}
+        <div className="sf-enter absolute inset-0 overflow-hidden">
+          <div className="sf-rain sf-rain-far" />
+          <div className="sf-rain sf-rain-near" />
+          {weather === "storm" && <div className="sf-rain sf-rain-heavy" />}
         </div>
       )}
 

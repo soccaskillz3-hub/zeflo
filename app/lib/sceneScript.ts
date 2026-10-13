@@ -7,6 +7,8 @@
 // weather can't be known yet otherwise), and the saved choices and the clock if not (with the same default sunrise and sunset as
 // timeOfDay in weather.ts). Must stay in step with SceneProvider (scene.tsx) and its storage keys.
 
+import {STILL_KEY} from "./stillScene";
+
 export const SCENE_KEY = "studyflow:scene";
 
 export const SCENE_SCRIPT = `(function(){try{
@@ -24,4 +26,5 @@ time=m>=345&&m<465?"sunrise":m>=465&&m<1080?"day":m>=1080&&m<1185?"dusk":"night"
 var weather=s.getItem("studyflow:weather-override");
 if(weathers.indexOf(weather)<0)weather=fresh&&weathers.indexOf(last.weather)>=0?last.weather:"clear";
 d.dataset.theme=theme;d.dataset.time=time;d.dataset.weather=weather;
+if(s.getItem("${STILL_KEY}")==="1")d.setAttribute("data-still","");
 }catch(e){}})();`;

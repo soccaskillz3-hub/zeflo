@@ -16,6 +16,8 @@ type TimerState = {
 export type Phase = "focus" | "paused" | "break" | "complete";
 
 const STORAGE_KEY = "studyflow:timer";
+// Fired on this page whenever the saved timer changes (other tabs get the "storage" event).
+const CHANGED = "zeflo:timer";
 
 function load(): TimerState | null {
   try {
@@ -32,10 +34,65 @@ function save(state: TimerState | null) {
   } catch {
     // Not persisted; the timer still runs for this page view.
   }
+  window.dispatchEvent(new Event(CHANGED));
 }
 
 const focusLeft = (s: TimerState, now: number) =>
   Math.max(0, s.runningSince === null ? s.focusLeftMs : s.focusLeftMs - (now - s.runningSince));
+
+// Where a timer is at a moment. A break that has run out counts as focus again from when it
+// ended, as the timer page would have switched back then.
+function statusAt(s: TimerState, now: number): {phase: Phase; focusLeftMs: number; breakLeftMs: number} {
+  if (s.onBreak && now < s.onBreak.endsAt) {
+    return {phase: "break", focusLeftMs: focusLeft(s, now), breakLeftMs: s.onBreak.endsAt - now};
+  }
+  const resumed = s.onBreak ? {...s, onBreak: null, runningSince: s.onBreak.endsAt} : s;
+  const left = focusLeft(resumed, now);
+  return {phase: left <= 0 ? "complete" : resumed.runningSince === null ? "paused" : "focus", focusLeftMs: left, breakLeftMs: 0};
+}
+
+// "23:41", or "1:05:00" from an hour up.
+export function countdown(ms: number) {
+  const total = Math.ceil(ms / 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  return h > 0 ? `${h}:${pad(m)}:${pad(total % 60)}` : `${pad(m)}:${pad(total % 60)}`;
+}
+
+export type SavedTimer = {sessionId: string; phase: Phase; focusLeftMs: number; breakLeftMs: number};
+
+// The timer left running in this browser (any page), kept up to date each second, or null.
+// For "Continue" buttons: it never starts, changes or clears a timer.
+export function useSavedTimer(): SavedTimer | null {
+  const [state, setState] = useState<TimerState | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const read = () => {
+      setState(load());
+      setNow(Date.now());
+    };
+    read();
+    window.addEventListener(CHANGED, read);
+    window.addEventListener("storage", read);
+    return () => {
+      window.removeEventListener(CHANGED, read);
+      window.removeEventListener("storage", read);
+    };
+  }, []);
+
+  // Tick only while something is counting down; a paused timer doesn't change.
+  const status = state ? statusAt(state, now) : null;
+  const counting = status?.phase === "focus" || status?.phase === "break";
+  useEffect(() => {
+    if (!counting) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [counting]);
+
+  return state && status ? {sessionId: state.sessionId, ...status} : null;
+}
 
 // Runs the timer for one session of `minutes` length. Resumes a saved timer for the same
 // session; otherwise starts a fresh one.
