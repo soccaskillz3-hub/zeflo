@@ -5,7 +5,6 @@ import ForestScene from "./ForestScene";
 import OceanScene from "./OceanScene";
 import WeatherLayers from "./WeatherLayers";
 import {useSceneRest} from "../../lib/sceneRest";
-import {useViewportGap} from "../../lib/viewportGap";
 import type {Theme} from "../../lib/themes";
 import type {TimeOfDay, Weather} from "../../lib/weather";
 
@@ -63,18 +62,16 @@ export default function Backdrop({theme, weather, time, visible}: Props) {
     return () => clearTimeout(id);
   }, [visible, settled]);
 
-  useViewportGap();
-
   // As tall as the screen with the browser's bars hidden (100lvh), not just the space between
   // them: Safari on iPhone draws the page under its floating toolbar, and a scene sized to the
-  // visible area stopped short of it, leaving a flat band at the bottom. Plus iOS 26's occasional gap (lib/viewportGap.ts).
+  // visible area stopped short of it, leaving a flat band at the bottom.
   return (
     <div
       aria-hidden
       data-theme={theme}
       data-time={time}
       data-weather={weather}
-      className={`sf-backdrop pointer-events-none fixed inset-x-0 top-0 -z-10 h-[calc(100lvh+var(--ios-gap,0px))] overflow-hidden transition-opacity duration-700 ${settled ? "" : "sf-instant"}`}
+      className={`sf-backdrop pointer-events-none fixed inset-x-0 top-0 -z-10 h-lvh overflow-hidden transition-opacity duration-700 ${settled ? "" : "sf-instant"}`}
       style={{opacity: visible ? 1 : 0}}
     >
       {leaving && leaving !== shown && (

@@ -158,6 +158,14 @@ body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
+/* iOS 26 Home Screen app: on a page too short to scroll (Reminders with nothing in it), iOS
+   sometimes shrinks the app's area by a status bar's height and fills the bottom with a flat band
+   over the tab bar; pages that scroll never showed it. So every page there is at least a pixel
+   taller than the screen. */
+@media (display-mode: standalone) {
+  body { min-height: calc(100lvh + 1px); }
+}
+
 /* The same, for full-screen layers (the timer, the clock) and panels pinned to an edge. */
 .sf-safe {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
@@ -1756,7 +1764,7 @@ html[data-navigated] .sf-in { animation: none; }
 .sf-tabbar {
   position: fixed;
   inset-inline: 0.75rem;
-  bottom: calc(env(safe-area-inset-bottom) + 0.5rem - var(--ios-gap, 0px)); /* see lib/viewportGap.ts */
+  bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
   z-index: 50;
 }
 @media (prefers-reduced-motion: reduce) {
