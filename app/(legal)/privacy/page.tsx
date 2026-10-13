@@ -32,6 +32,9 @@ export default function PrivacyPage() {
           progress and streak.
         </li>
         <li>
+          <strong>Your reminders:</strong> the reminders you write (what, and when they&apos;re due) and when you check them off.
+        </li>
+        <li>
           <strong>Your settings:</strong> your theme, scene, sound, timer and reminder choices.
         </li>
         <li>

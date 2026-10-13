@@ -48,7 +48,7 @@ export default function DeleteAccount({opens}: {opens: number}) {
           Delete your Zeflo account?
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-white/75">
-          This deletes your account and everything in it straight away: your classes, study sessions, progress and settings. Any AI apps you
+          This deletes your account and everything in it straight away: your classes, study sessions, reminders, progress and settings. Any AI apps you
           connected are disconnected. It can&apos;t be undone.
         </p>
 

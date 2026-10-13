@@ -11,6 +11,19 @@ self.addEventListener("push", (event) => {
   } catch {
     // Not JSON: show what we can rather than nothing (phones penalise silent pushes).
   }
+  // The user's own reminders (kind "reminder") stay on screen until they're dealt with, and
+  // buzz even when one with the same tag is already showing.
+  const own = notice.kind === "reminder";
+  // A session reminder that arrives late (the device was asleep) says what's true now.
+  if (typeof notice.startsAt === "number" && notice.time) {
+    const minutes = Math.round((notice.startsAt - Date.now()) / 60000);
+    notice.body =
+      minutes > 0
+        ? `Starts in ${minutes} ${minutes === 1 ? "minute" : "minutes"}, at ${notice.time}.`
+        : minutes === 0
+          ? `Starting now, at ${notice.time}.`
+          : `Started at ${notice.time}.`;
+  }
   event.waitUntil(
     self.registration.showNotification(notice.title || "Zeflo", {
       body: notice.body || "",
@@ -18,6 +31,7 @@ self.addEventListener("push", (event) => {
       badge: "/badge.png",
       tag: notice.tag, // the same reminder twice replaces itself
       data: {url: notice.url || "/"},
+      ...(own && {requireInteraction: true, renotify: true, vibrate: [120, 60, 120]}),
     }),
   );
 });

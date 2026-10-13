@@ -10,7 +10,7 @@ export default async function MainLayout({children}: LayoutProps<"/">) {
   await requireUser();
   return (
     <main className="sf-lift flex-1 font-mono text-white">
-      <div className="mx-auto max-w-5xl px-4 pb-36 pt-6 sm:px-8 sm:pb-24 sm:pt-8">
+      <div className="mx-auto max-w-5xl px-4 pb-36 pt-6 sm:px-8 md:pb-24 sm:pt-8">
         <AppHeader />
         <ScheduleNotices />
         <Nudges />

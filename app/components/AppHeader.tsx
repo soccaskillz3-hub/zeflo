@@ -55,6 +55,17 @@ const SECTIONS: Section[] = [
     ),
   },
   {
+    label: "Reminders",
+    href: "/reminders",
+    current: (p) => p === "/reminders",
+    icon: (
+      <svg viewBox="0 0 20 20" className="h-5 w-5" {...stroke}>
+        <path d="M5.2 13.8V9.2a4.8 4.8 0 0 1 9.6 0v4.6l1.4 1.6H3.8l1.4-1.6Z" />
+        <path d="M8.3 17.4a1.9 1.9 0 0 0 3.4 0" />
+      </svg>
+    ),
+  },
+  {
     label: "Classes",
     href: "/classes",
     current: (p) => p === "/classes",
@@ -88,7 +99,7 @@ function useNav(path: string): Nav {
 function SectionLinks({nav}: {nav: Nav}) {
   const {list, pill} = useSlidingPill(nav.path);
   return (
-    <nav aria-label="Sections" className="max-sm:hidden">
+    <nav aria-label="Sections" className="max-md:hidden">
       <div ref={list} className="sf-card relative flex rounded-full p-1">
         <span ref={pill} className="sf-nav-pill" aria-hidden style={{top: 4, bottom: 4}} />
         {SECTIONS.map((s) => {
@@ -100,7 +111,7 @@ function SectionLinks({nav}: {nav: Nav}) {
               onClick={nav.open(s)}
               prefetch
               aria-current={current ? "page" : undefined}
-              className={`relative rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.22em] transition-colors lg:px-5 ${
+              className={`relative rounded-full px-3 py-2 text-[11px] uppercase tracking-[0.18em] transition-colors lg:px-5 lg:tracking-[0.22em] ${
                 current ? "text-scene-ink" : "text-white/65 hover:text-white"
               }`}
             >
@@ -113,12 +124,12 @@ function SectionLinks({nav}: {nav: Nav}) {
   );
 }
 
-// Phones: the sections as a bar at the bottom of the screen, in reach of a thumb.
+// Phones and narrow windows (five sections need the width): the sections as a bar at the bottom of the screen, in reach of a thumb.
 function TabBar({nav}: {nav: Nav}) {
   const {list, pill} = useSlidingPill(nav.path);
   return (
-    <nav aria-label="Sections" className="sf-tabbar sm:hidden">
-      <div ref={list} className="sf-card relative mx-auto grid max-w-md grid-cols-4 rounded-[1.4rem] p-1.5">
+    <nav aria-label="Sections" className="sf-tabbar md:hidden">
+      <div ref={list} className="sf-card relative mx-auto grid max-w-md grid-cols-5 rounded-[1.4rem] p-1.5">
         <span ref={pill} className="sf-nav-pill rounded-2xl" aria-hidden style={{top: 6, bottom: 6, borderRadius: "1rem"}} />
         {SECTIONS.map((s) => {
           const current = nav.isCurrent(s);
@@ -134,7 +145,7 @@ function TabBar({nav}: {nav: Nav}) {
               }`}
             >
               {s.icon}
-              <span className="text-[9px] uppercase tracking-[0.18em]">{s.label}</span>
+              <span className="text-[9px] uppercase tracking-[0.12em]">{s.label}</span>
             </Link>
           );
         })}
@@ -185,7 +196,7 @@ export default function AppHeader() {
           ZEFLO
         </Link>
         <SectionLinks nav={nav} />
-        <div className="flex items-center gap-4 sm:gap-5">
+        <div className="flex items-center gap-4 lg:gap-5">
           {/* The date: short on phones, full on wide screens, and left out where the section links
               need the room (and on the narrowest phones). */}
           <p className="whitespace-nowrap text-[11px] uppercase tracking-[0.2em] text-white/75 max-[359px]:hidden sm:max-lg:hidden lg:tracking-[0.3em]">

@@ -20,7 +20,7 @@ const NOTE_MS = 4200;
 
 // "No problem…" after a Not now. Fades away on its own (.sf-note).
 // Shown where the offer was: in the page, or floating where the install offer floated.
-const FLOATING = "sf-panel fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-40 rounded-2xl border sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[23rem]";
+const FLOATING = "sf-panel fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-40 rounded-2xl border md:inset-x-auto md:bottom-6 md:right-6 md:w-[23rem]";
 
 function Note({text, floating, onClose}: {text: string; floating: boolean; onClose: () => void}) {
   useEffect(() => {
