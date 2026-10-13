@@ -4,6 +4,7 @@ import {useEffect, useState} from "react";
 import ForestScene from "./ForestScene";
 import OceanScene from "./OceanScene";
 import WeatherLayers from "./WeatherLayers";
+import {useSceneRest} from "../../lib/sceneRest";
 import type {Theme} from "../../lib/themes";
 import type {TimeOfDay, Weather} from "../../lib/weather";
 
@@ -19,6 +20,8 @@ function SceneFor({theme, ...rest}: SceneProps) {
 // The scene behind the whole app: the chosen theme, with shared weather, grain and vignette on top.
 // Purely decorative: fixed, non-interactive and hidden from assistive tech.
 export default function Backdrop({theme, weather, time, visible}: Props) {
+  useSceneRest();
+
   // When the theme changes, keep the old one underneath for a moment and fade the new one in.
   // (Not on the first appearance, when the saved theme loads just as the scene fades in.)
   const [shown, setShown] = useState(theme);

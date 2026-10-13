@@ -2309,3 +2309,17 @@ html:has(.wl-story) {
 :root[data-still] .sf-wildlife {
   display: none;
 }
+
+/* ---------- Resting scene ----------
+   lib/sceneRest.ts: after a minute untouched, or a few seconds in another window, the scene rests,
+   which stops nearly all of Zeflo's CPU and GPU use. First ("fade") falling rain and snow, dust and
+   animals fade out while still moving, then ("still") everything pauses where it is. Waking
+   resumes it, and they fade back in. */
+.sf-falling { transition: opacity 1.5s ease; }
+:root[data-resting] .sf-falling { opacity: 0; }
+:root[data-resting="still"] .sf-falling { visibility: hidden; }
+:root[data-resting="still"] .sf-backdrop *,
+:root[data-resting="still"] .sf-backdrop *::before,
+:root[data-resting="still"] .sf-backdrop *::after {
+  animation-play-state: paused !important;
+}

@@ -325,7 +325,8 @@ export default function ForestWildlife({time, weather}: {time: TimeOfDay; weathe
         later(planning, between(...(first ? species.first : species.every)), () => {
           // Owls perch on limbs, which narrow or tall screens crop away.
           const fits = kind !== "owl" || window.matchMedia(LIMBS_FIT).matches;
-          const still = document.documentElement.hasAttribute("data-still"); // Settings → Still scene: no visitors
+          // Settings → Still scene, or resting (lib/sceneRest.ts): no visitors.
+          const still = document.documentElement.matches("[data-still], [data-resting]");
           if (!document.hidden && !busy.current.has(kind) && fits && !still) visit(kind);
           plan(false);
         });
@@ -335,7 +336,7 @@ export default function ForestWildlife({time, weather}: {time: TimeOfDay; weathe
   }, [time, weather]);
 
   return (
-    <div className="sf-wildlife absolute inset-0">
+    <div className="sf-wildlife sf-falling absolute inset-0">
       {visits.map((v) => (
         <VisitView key={v.id} visit={v} />
       ))}

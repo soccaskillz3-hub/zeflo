@@ -156,25 +156,27 @@ export default function ForestScene({weather, time, rainbow}: {weather: Weather;
         ))}
       </div>
 
-      <FadeLayer opacity={t.motes * w.motes * Math.max(rays, 0.3)}>
-        {MOTES.map((m, i) => (
-          <span
-            key={i}
-            className="sf-mote absolute rounded-full"
-            style={
-              {
-                left: `${m.left}%`,
-                top: `${m.top}%`,
-                width: m.size,
-                height: m.size,
-                animationDuration: `${m.duration}s, ${m.duration / 3}s`,
-                animationDelay: `${m.delay}s, ${m.delay}s`,
-                "--drift": `${m.drift}px`,
-              } as CSSProperties
-            }
-          />
-        ))}
-      </FadeLayer>
+      <div className="sf-falling absolute inset-0">
+        <FadeLayer opacity={t.motes * w.motes * Math.max(rays, 0.3)}>
+          {MOTES.map((m, i) => (
+            <span
+              key={i}
+              className="sf-mote absolute rounded-full"
+              style={
+                {
+                  left: `${m.left}%`,
+                  top: `${m.top}%`,
+                  width: m.size,
+                  height: m.size,
+                  animationDuration: `${m.duration}s, ${m.duration / 3}s`,
+                  animationDelay: `${m.delay}s, ${m.delay}s`,
+                  "--drift": `${m.drift}px`,
+                } as CSSProperties
+              }
+            />
+          ))}
+        </FadeLayer>
+      </div>
 
       <TreeBand shape={TREE_BANDS[2]} tone={2} />
       <div className="sf-forest-floor absolute inset-x-0 bottom-0" />

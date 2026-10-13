@@ -78,11 +78,14 @@ export default function WeatherLayers({weather, gradual}: {weather: Weather; gra
         </div>
       )}
 
+      {/* Falling layers fade out while the scene rests (lib/sceneRest.ts), rather than hanging frozen. */}
       {raining && (
-        <div className="sf-enter absolute inset-0 overflow-hidden">
-          <div className="sf-rain sf-rain-far" />
-          <div className="sf-rain sf-rain-near" />
-          {weather === "storm" && <div className="sf-rain sf-rain-heavy" />}
+        <div className="sf-falling absolute inset-0">
+          <div className="sf-enter absolute inset-0 overflow-hidden">
+            <div className="sf-rain sf-rain-far" />
+            <div className="sf-rain sf-rain-near" />
+            {weather === "storm" && <div className="sf-rain sf-rain-heavy" />}
+          </div>
         </div>
       )}
 
@@ -91,9 +94,10 @@ export default function WeatherLayers({weather, gradual}: {weather: Weather; gra
         style={{opacity: DARK[weather]}}
       />
 
-      {weather === "storm" && <div className="sf-lightning absolute inset-0" />}
-
-      {weather === "snow" && <Snowfall gradual={gradual} />}
+      <div className="sf-falling absolute inset-0">
+        {weather === "storm" && <div className="sf-lightning absolute inset-0" />}
+        {weather === "snow" && <Snowfall gradual={gradual} />}
+      </div>
     </>
   );
 }
