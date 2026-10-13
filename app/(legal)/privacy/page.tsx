@@ -35,7 +35,7 @@ export default function PrivacyPage() {
           <strong>Your reminders:</strong> the reminders you write (what, and when they&apos;re due) and when you check them off.
         </li>
         <li>
-          <strong>Your settings:</strong> your theme, scene, sound, timer and reminder choices.
+          <strong>Your settings:</strong> your theme, scene, sound, timer and reminder choices, and your time zone (so a connected AI can set reminders at your local time).
         </li>
         <li>
           <strong>Your devices, if you turn on reminders:</strong> for each device, the address its browser or phone gives Zeflo for sending it

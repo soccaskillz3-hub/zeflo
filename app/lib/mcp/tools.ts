@@ -8,15 +8,18 @@ import {addDays, daysBetween, isDayKey} from "../days";
 import {toMinutes} from "../time";
 
 // What a connected AI (Claude, ChatGPT, ...) can do in Zeflo, over MCP: read the user's classes,
-// tests, study sessions and progress, and plan, change or remove study sessions. Each call runs
+// tests, study sessions, reminders and progress, and plan, change or remove study sessions and
+// reminders. Each call runs
 // as the signed-in user with their OAuth token, so the database's row level security keeps it to
 // their own data, exactly as in the app.
 
-export const INSTRUCTIONS = `Zeflo is a calm study planner for students. It holds the user's class timetable (imported from their school, read-only here), their tests and exams, and the study sessions they plan around them, which they tick off as they finish.
+export const INSTRUCTIONS = `Zeflo is a calm study planner for students. It holds the user's class timetable (imported from their school, read-only here), their tests and exams, the study sessions they plan around them, which they tick off as they finish, and reminders: their own to-dos due at a time ("Email the TA"), separate from study sessions, which notify them right when due.
 
 Dates are the user's own calendar days ("YYYY-MM-DD") and times are their local 24-hour clock ("HH:MM"). Zeflo doesn't know the user's time zone, so use today's date as the user knows it, and pass it as \`today\` to get_schedule.
 
-When planning study time: call get_schedule first, avoid the user's classes and existing sessions, keep sessions between 25 and 120 minutes with short breaks between long stretches, and spread work for a test over the days before it rather than cramming. Name sessions after the course and the task, e.g. "MATH 135 · practice midterm". Briefly confirm the plan with the user before adding many sessions, and always before removing any.`;
+When planning study time: call get_schedule first, avoid the user's classes and existing sessions, keep sessions between 25 and 120 minutes with short breaks between long stretches, and spread work for a test over the days before it rather than cramming. Name sessions after the course and the task, e.g. "MATH 135 · practice midterm". Briefly confirm the plan with the user before adding many sessions, and always before removing any.
+
+Reminders are for one-off things to do at a time, not study blocks: use add_reminders for "remind me to…", and study sessions for time spent studying. Reminder times are local too; Zeflo knows the user's time zone from their device, so pass \`timeZone\` (an IANA name like "America/Toronto") only if the user says they're somewhere else or a tool asks for it.`;
 
 const MAX_DAYS = 62; // per read: about two months
 const MAX_ADD = 40;
@@ -84,13 +87,64 @@ const REMOVES = {readOnlyHint: false, destructiveHint: true, openWorldHint: fals
 const overlaps = (aStart: string, aEnd: string, bStart: string, bEnd: string) =>
   toMinutes(aStart) < toMinutes(bEnd) && toMinutes(bStart) < toMinutes(aEnd);
 
+// ---------- Reminders ----------
+// Saved as moments (due_at), shown and given as the user's local day and time in their time zone:
+// the one their Zeflo device last reported (prefs.timeZone, see lib/prefs.tsx), unless given.
+
+type ReminderRow = {id: string; title: string; due_at: string; done_at: string | null};
+const REMINDER_COLUMNS = "id, title, due_at, done_at";
+
+const timeZone = z
+  .string()
+  .refine((tz) => {
+    try {
+      new Intl.DateTimeFormat("en-US", {timeZone: tz});
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Use an IANA time zone, e.g. America/Toronto.")
+  .describe('The user\'s IANA time zone, e.g. "America/Toronto". Leave out to use the one Zeflo knows.');
+const reminderTitle = z.string().trim().min(1).max(200).describe('What to be reminded of, e.g. "Email the TA about A4"');
+
+async function zoneOf(supabase: SupabaseClient, given?: string) {
+  if (given) return given;
+  const {data} = await supabase.from("user_settings").select("prefs").maybeSingle();
+  const tz = (data?.prefs as {timeZone?: unknown} | null)?.timeZone;
+  return typeof tz === "string" && timeZone.safeParse(tz).success ? tz : null;
+}
+const NO_ZONE = "Zeflo doesn't know the user's time zone yet (they haven't opened Zeflo since reminders arrived). Ask them, and pass it as `timeZone`.";
+
+// The local day and time of a moment in a time zone.
+function localParts(at: Date, tz: string) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23"})
+      .formatToParts(at)
+      .map((p) => [p.type, p.value]),
+  );
+  return {date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}`};
+}
+
+// The moment a local day and time happen in a time zone (checked twice, for days the clocks change).
+function momentOf(date: string, time: string, tz: string) {
+  const wanted = Date.parse(`${date}T${time}:00Z`);
+  let at = wanted;
+  for (let i = 0; i < 2; i++) {
+    const seen = localParts(new Date(at), tz);
+    at += wanted - Date.parse(`${seen.date}T${seen.time}:00Z`);
+  }
+  return new Date(at);
+}
+
+const reminder = (r: ReminderRow, tz: string) => ({id: r.id, title: r.title, ...localParts(new Date(r.due_at), tz), done: r.done_at !== null});
+
 export function registerTools(server: McpServer) {
   server.registerTool(
     "get_schedule",
     {
       title: "Get schedule",
       description:
-        "The user's classes and study sessions for each day from `from` to `to` (inclusive, at most two months), plus their tests and exams from `today` on. Call this before planning.",
+        "The user's classes, study sessions and reminders for each day from `from` to `to` (inclusive, at most two months), plus their tests and exams from `today` on. Call this before planning.",
       inputSchema: z.object({
         from: day,
         to: day,
@@ -103,13 +157,24 @@ export function registerTools(server: McpServer) {
       const days = daysBetween(from, to);
       if (days.length > MAX_DAYS) return fail(`Ask for at most ${MAX_DAYS} days at a time.`);
       const supabase = db(ctx);
-      const [classes, sessions] = await Promise.all([
+      const [classes, sessions, tz] = await Promise.all([
         supabase.from("class_meetings").select(CLASS_COLUMNS),
         supabase.from("study_sessions").select(SESSION_COLUMNS).gte("day", from).lte("day", to).order("day").order("starts_at"),
+        zoneOf(supabase),
       ]);
       if (classes.error || sessions.error) return fail("Couldn't read the schedule. Try again.");
       const meetings = (classes.data as ClassRow[]).map(classFromRow);
       const rows = (sessions.data as SessionRow[]).map(session);
+      // Reminders, a day either side of the range in UTC, then kept to the user's local days.
+      const due = tz
+        ? await supabase
+            .from("reminders")
+            .select(REMINDER_COLUMNS)
+            .gte("due_at", `${addDays(from, -1)}T00:00:00Z`)
+            .lt("due_at", `${addDays(to, 2)}T00:00:00Z`)
+            .order("due_at")
+        : null;
+      const reminders = tz ? ((due?.data ?? []) as ReminderRow[]).map((r) => reminder(r, tz)) : [];
 
       return reply({
         days: days.map((d) => ({
@@ -125,6 +190,7 @@ export function registerTools(server: McpServer) {
             isTestOrExam: c.startsOn !== null && c.startsOn === c.endsOn,
           })),
           sessions: rows.filter((s) => s.date === d).map((s) => ({id: s.id, subject: s.subject, start: s.start, end: s.end, isBreak: s.isBreak, done: s.done})),
+          reminders: reminders.filter((r) => r.date === d).map((r) => ({id: r.id, title: r.title, time: r.time, done: r.done})),
         })),
         upcomingTests: upcomingTests(meetings, today ?? from, 0).map((t) => ({
           course: t.code,
@@ -234,6 +300,104 @@ export function registerTools(server: McpServer) {
     async ({ids}, ctx) => {
       const {data, error} = await db(ctx).from("study_sessions").delete().in("id", ids).select("id");
       if (error) return fail("Couldn't remove those sessions.");
+      return reply({removed: (data as {id: string}[]).map((r) => r.id)});
+    },
+  );
+
+  server.registerTool(
+    "get_reminders",
+    {
+      title: "Get reminders",
+      description:
+        "The user's reminders that aren't done yet (overdue ones included), plus those checked off in the last week, with each one's local date and time. For reminders on particular days, get_schedule has them too.",
+      inputSchema: z.object({timeZone: timeZone.optional()}),
+      annotations: READS,
+    },
+    async ({timeZone: given}, ctx) => {
+      const supabase = db(ctx);
+      const tz = await zoneOf(supabase, given);
+      if (!tz) return fail(NO_ZONE);
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const {data, error} = await supabase.from("reminders").select(REMINDER_COLUMNS).or(`done_at.is.null,done_at.gte.${weekAgo}`).order("due_at");
+      if (error) return fail("Couldn't read reminders.");
+      const all = (data as ReminderRow[]).map((r) => reminder(r, tz));
+      return reply({timeZone: tz, open: all.filter((r) => !r.done), recentlyDone: all.filter((r) => r.done)});
+    },
+  );
+
+  server.registerTool(
+    "add_reminders",
+    {
+      title: "Add reminders",
+      description:
+        "Add reminders: one-off things to do, each notifying the user on their devices right at its local date and time. Not for study time (use add_study_sessions).",
+      inputSchema: z.object({
+        reminders: z.array(z.object({title: reminderTitle, date: day, time})).min(1).max(MAX_ADD),
+        timeZone: timeZone.optional(),
+      }),
+      annotations: ADDS,
+    },
+    async ({reminders: wanted, timeZone: given}, ctx) => {
+      const supabase = db(ctx);
+      const tz = await zoneOf(supabase, given);
+      if (!tz) return fail(NO_ZONE);
+      const rows = wanted.map((r) => ({title: r.title, due_at: momentOf(r.date, r.time, tz).toISOString()}));
+      const {data, error} = await supabase.from("reminders").insert(rows).select(REMINDER_COLUMNS);
+      if (error) return fail("Couldn't add those reminders.");
+      const past = rows.some((r) => Date.parse(r.due_at) < Date.now() - 60_000);
+      return reply({
+        added: (data as ReminderRow[]).map((r) => reminder(r, tz)),
+        timeZone: tz,
+        ...(past && {note: "Some of these are already past, so they won't send a notification; they show as overdue."}),
+      });
+    },
+  );
+
+  server.registerTool(
+    "update_reminder",
+    {
+      title: "Update a reminder",
+      description: "Change a reminder's title, date or time (a new time notifies again then), or mark it done or not done. Only the fields given change.",
+      inputSchema: z.object({
+        id: z.string().uuid(),
+        title: reminderTitle.optional(),
+        date: day.optional(),
+        time: time.optional(),
+        done: z.boolean().optional(),
+        timeZone: timeZone.optional(),
+      }),
+      annotations: CHANGES,
+    },
+    async ({id, title, date, time: at, done, timeZone: given}, ctx) => {
+      const supabase = db(ctx);
+      const tz = await zoneOf(supabase, given);
+      if (!tz) return fail(NO_ZONE);
+      const current = await supabase.from("reminders").select(REMINDER_COLUMNS).eq("id", id).maybeSingle();
+      if (current.error || !current.data) return fail("No reminder with that id.");
+      const was = current.data as ReminderRow;
+      const local = localParts(new Date(was.due_at), tz);
+      const changes = {
+        ...(title && {title}),
+        ...((date || at) && {due_at: momentOf(date ?? local.date, at ?? local.time, tz).toISOString()}),
+        ...(done !== undefined && {done_at: done ? (was.done_at ?? new Date().toISOString()) : null}),
+      };
+      const {data, error} = await supabase.from("reminders").update(changes).eq("id", id).select(REMINDER_COLUMNS).single();
+      if (error) return fail("Couldn't save that change.");
+      return reply({updated: reminder(data as ReminderRow, tz)});
+    },
+  );
+
+  server.registerTool(
+    "remove_reminders",
+    {
+      title: "Remove reminders",
+      description: "Delete reminders by id. Confirm with the user first; to just check one off, use update_reminder with done: true.",
+      inputSchema: z.object({ids: z.array(z.string().uuid()).min(1).max(MAX_ADD)}),
+      annotations: REMOVES,
+    },
+    async ({ids}, ctx) => {
+      const {data, error} = await db(ctx).from("reminders").delete().in("id", ids).select("id");
+      if (error) return fail("Couldn't remove those reminders.");
       return reply({removed: (data as {id: string}[]).map((r) => r.id)});
     },
   );

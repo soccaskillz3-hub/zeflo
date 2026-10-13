@@ -13,6 +13,7 @@ const PROMPTS = [
   "Plan study sessions for my next test, around my classes.",
   "I'm free tomorrow afternoon. What should I study, and when?",
   "Look at what I finished this week and plan next week better.",
+  "Remind me to email my TA tomorrow at 9.",
 ];
 
 const label = "text-[11px] uppercase tracking-[0.25em] text-white/70";
@@ -162,7 +163,7 @@ export default function AiConnect({opens}: {opens: number}) {
         )}
 
         <p className="mt-6 border-t border-dashed border-white/15 pt-4 text-[11px] leading-relaxed text-white/50">
-          Your AI can read your classes and progress and plan your study sessions. It can&apos;t change your classes or settings, or see your
+          Your AI can read your classes and progress, plan your study sessions and set reminders. It can&apos;t change your classes or settings, or see your
           password, and you can disconnect it here any time.
         </p>
       </div>

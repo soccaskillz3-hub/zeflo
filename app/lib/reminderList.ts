@@ -1,6 +1,7 @@
 "use client";
 
 import {useCallback, useEffect, useRef, useState} from "react";
+import {addDays, dayKey, toDate} from "./days";
 import {createClient} from "./supabase/client";
 
 // The user's own reminders (the Reminders page), kept apart from study sessions. Each is due at a
@@ -18,6 +19,8 @@ const fromRow = (r: Row): Reminder => ({
   dueAt: new Date(r.due_at),
   doneAt: r.done_at ? new Date(r.done_at) : null,
 });
+
+const pad = (n: number) => String(n).padStart(2, "0");
 
 const byDue = (a: Reminder, b: Reminder) => a.dueAt.getTime() - b.dueAt.getTime();
 
@@ -93,3 +96,34 @@ export function useReminderList() {
 
   return {reminders, error, dismissError: () => setError(null), add, toggle, remove};
 }
+
+// Reminders due on the days from `from` to `to` (local days), done or not, for the calendar.
+// Read again when the days change or someone comes back to the tab.
+export function useRemindersIn(from: string, to: string) {
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  useEffect(() => {
+    let current = true;
+    const read = () =>
+      createClient()
+        .from("reminders")
+        .select("id, title, due_at, done_at")
+        .gte("due_at", toDate(from).toISOString())
+        .lt("due_at", toDate(addDays(to, 1)).toISOString())
+        .order("due_at")
+        .then(({data}) => {
+          if (current && data) setReminders((data as Row[]).map(fromRow));
+        });
+    read();
+    const again = () => document.visibilityState === "visible" && read();
+    document.addEventListener("visibilitychange", again);
+    return () => {
+      current = false;
+      document.removeEventListener("visibilitychange", again);
+    };
+  }, [from, to]);
+  return reminders;
+}
+
+// "HH:MM" on the local clock, for placing a reminder on a timeline.
+export const reminderTime = (r: Reminder) => `${pad(r.dueAt.getHours())}:${pad(r.dueAt.getMinutes())}`;
+export const remindersOn = (reminders: Reminder[], day: string) => reminders.filter((r) => dayKey(r.dueAt) === day);

@@ -8,6 +8,8 @@ import {Card, CardHead} from "../../../components/Card";
 import CalendarViews from "../../../components/CalendarViews";
 import {classesOn, useClasses} from "../../../lib/classes";
 import {dayEntries, hourRange, layoutBlocks, onTimeline} from "../../../lib/dayLayout";
+import {reminderTime, remindersOn, useRemindersIn} from "../../../lib/reminderList";
+import ReminderMarks from "../../../components/ReminderMarks";
 import {addDays, formatDay, isDayKey, weekDays, weekStart} from "../../../lib/days";
 import {useSchedule} from "../../../lib/schedule";
 import {formatHour, formatMinutes, formatShortTime, formatTime, nowMinutes, toMinutes} from "../../../lib/time";
@@ -38,6 +40,7 @@ function WeekView({start, today}: {start: string; today: string}) {
   useEffect(() => {
     loadDays(start, end);
   }, [start, end, loadDays]);
+  const reminders = useRemindersIn(start, end);
 
     // Seven columns don't fit a phone, so phones get the day view: today if it's in this week,
     // else the week's first day.
@@ -61,7 +64,7 @@ function WeekView({start, today}: {start: string; today: string}) {
     const loaded = days.every(isLoaded);
 
     const {first: firstHour, last: lastHour} = hourRange(
-      columns.flatMap((c) => c.entries),
+      [...columns.flatMap((c) => c.entries), ...reminders.map((r) => ({start: reminderTime(r), end: reminderTime(r)}))],
       now,
     );
     const hours = Array.from({length: lastHour - firstHour}, (_, i) => firstHour + i);
@@ -247,6 +250,8 @@ function WeekView({start, today}: {start: string; today: string}) {
                         </Link>
                       );
                     })}
+
+                    <ReminderMarks reminders={remindersOn(reminders, day)} top={top} compact />
 
                     {isToday && onTimeline(now, {first: firstHour, last: lastHour}) && (
                       <div

@@ -95,6 +95,14 @@ export function PrefsProvider({userId, children}: {userId: string | null; childr
         const saved = data?.prefs;
         raw.current = saved && typeof saved === "object" && !Array.isArray(saved) ? (saved as Record<string, unknown>) : {};
         setState(parse(raw.current));
+        // The time zone this device is in, for a connected AI, which only knows local days and
+        // times: it turns "9 AM tomorrow" into the moment a reminder is due (lib/mcp/tools.ts).
+        // Not a choice, so not in Prefs; saved only when it changes.
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (timeZone && raw.current.timeZone !== timeZone) {
+          raw.current = {...raw.current, timeZone};
+          createClient().from("user_settings").upsert({user_id: userId, prefs: raw.current}).then(() => {});
+        }
       });
     return () => {
       current = false;

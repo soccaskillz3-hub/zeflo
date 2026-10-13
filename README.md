@@ -4,7 +4,7 @@
 
 Zeflo is a calm study planner for students. Bring in your class timetable, plan study sessions around it (or ask your own AI to plan them for you), run a full-screen focus timer or clock for each one, and watch your streak and progress fill in — all on panes of liquid glass over a living scene, an ocean or a forest, that follows the real weather and time of day where you are, with sound to match.
 
-**Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.7.0
+**Live at [zeflo.vercel.app](https://zeflo.vercel.app)** · version 1.7.1
 
 <p>
   <img src="docs/screenshots/forest-day.jpg" alt="Today in the forest on a clear day: time studied, what's next with a Start button, and today's classes" width="49%">
@@ -19,9 +19,10 @@ Zeflo is a calm study planner for students. Bring in your class timetable, plan 
 
 ### Plan and focus
 
-- **Getting around** — four sections: **Today**, **Calendar**, **Progress** and **Classes**. On computers they're a pill along the top whose highlight slides (and stretches, like liquid) to the one you're on; on phones they're a floating tab bar at the bottom of the screen, in reach of your thumb.
+- **Getting around** — five sections: **Today**, **Calendar**, **Progress**, **Reminders** and **Classes**. On computers they're a pill along the top whose highlight slides (and stretches, like liquid) to the one you're on; on phones they're a floating tab bar at the bottom of the screen, in reach of your thumb.
 - **Today** — the first thing you see when you log in. A large card for **today**: time studied out of planned (breaks excluded), a progress line, what's on **now** or **next** (with the time left) and a **Start** button for it, and today's classes. Then cards for your **streak** (with the last two weeks as a row of days), **this week** (done out of planned and a bar for each day), **today's sessions** (click one to tick it off), and **countdowns to your next tests and exams**, taken straight from your imported class schedule.
-- **Calendar** — switch between **Day**, **Week** and **List** at the top. A **week view** of everything at a glance (classes and study sessions, Monday to Sunday) on tablets and computers, and an hour-by-hour **day view** with a live "now" line, which is what phones get. Step back and forward through weeks and days to plan ahead, with the arrows or by **swiping** (a finger on a phone or iPad, or two fingers on a trackpad); click any open time in the day view to add a session there, or press and drag to draw it at exactly the right length; then type its name right in the block and press Enter. Drag the block to move it, its top and bottom edges to change the times, or click a time to pick it exactly (on phones a panel slides up instead). The × on a session removes it, and overlapping sessions sit side by side. **List** shows today's sessions with an add form.
+- **Calendar** — switch between **Day**, **Week** and **List** at the top. A **week view** of everything at a glance (classes and study sessions, Monday to Sunday) on tablets and computers, and an hour-by-hour **day view** with a live "now" line, which is what phones get. Step back and forward through weeks and days to plan ahead, with the arrows or by **swiping** (a finger on a phone or iPad, or two fingers on a trackpad); click any open time in the day view to add a session there, or press and drag to draw it at exactly the right length; then type its name right in the block and press Enter. Drag the block to move it, its top and bottom edges to change the times, or click a time to pick it exactly (on phones a panel slides up instead). The × on a session removes it, and overlapping sessions sit side by side. **List** shows today's sessions with an add form, and today's reminders. Reminders show on the day and week views too, as a bell at their time; tap one to open it.
+- **Reminders** — your own to-dos, kept apart from study sessions: "Remind me to…", a day and a time. Right at that time a notification arrives (it stays on screen until you deal with it); tap it and Zeflo opens on that reminder, ready to tick off. Overdue ones wait under **Due**, and finished ones stay under **Done** for a week.
 - **Classes** — bring in your class schedule from any school, three ways:
   - **Paste it** from your school's portal. Pick your school for step-by-step help: Waterloo (Quest's list view), TMU (MyServiceHub's View My Classes), York (course timetable rows, with a start time and a length in minutes), or any other school, including other PeopleSoft portals and plain lines like `CS 135 LEC MWF 10:30-11:20 MC 2065`.
   - **Upload a calendar file** (.ics) exported from your portal or calendar app. Weekly events become classes, a one-off event that names a course (a midterm) becomes a test, and anything that isn't a course starts unticked.
@@ -68,7 +69,7 @@ Zeflo works with the AI you already use. Connect Claude (free plans included) or
 - *"I'm free tomorrow afternoon. What should I study, and when?"*
 - *"Look at what I finished this week and plan next week better."*
 
-It reads your classes, upcoming tests, study sessions and streak, then adds, moves or ticks off sessions right on your Zeflo calendar, spreading work for a test over the days before it and warning you about clashes. Because it's your own AI, it learns how you study and plans better the more you use it.
+It reads your classes, upcoming tests, study sessions, reminders and streak, then adds, moves or ticks off sessions and reminders right in Zeflo, spreading work for a test over the days before it and warning you about clashes. Because it's your own AI, it learns how you study and plans better the more you use it.
 
 - **Set up in a minute** — **Settings → Your AI** has the connector address, the steps for your assistant, and prompts to try.
 - **You stay in charge** — you approve each assistant on a Zeflo page that spells out what it can and can't do, and disconnect it any time from the same place. Assistants can read but never change your classes or settings: the database itself enforces that.

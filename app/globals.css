@@ -1756,7 +1756,7 @@ html[data-navigated] .sf-in { animation: none; }
 .sf-tabbar {
   position: fixed;
   inset-inline: 0.75rem;
-  bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  bottom: calc(env(safe-area-inset-bottom) + 0.5rem - var(--ios-gap, 0px)); /* see lib/viewportGap.ts */
   z-index: 50;
 }
 @media (prefers-reduced-motion: reduce) {

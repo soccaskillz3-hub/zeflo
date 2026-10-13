@@ -4,11 +4,13 @@ import {use, useCallback, useEffect, useRef, useState, type FormEvent, type Poin
 import CalendarNav from "../../components/CalendarNav";
 import StartButton from "../../components/StartButton";
 import {Card, CardHead} from "../../components/Card";
+import ReminderMarks from "../../components/ReminderMarks";
 import CalendarViews from "../../components/CalendarViews";
 import SessionForm from "../../components/SessionForm";
 import TimePicker from "../../components/TimePicker";
 import {classesOn, useClasses} from "../../lib/classes";
 import {dayEntries, hourRange, layoutBlocks, onTimeline} from "../../lib/dayLayout";
+import {reminderTime, useRemindersIn} from "../../lib/reminderList";
 import {addDays, formatDay, isDayKey} from "../../lib/days";
 import {useSchedule} from "../../lib/schedule";
 import {formatHour, formatMinutes, formatTime, fromMinutes, nowMinutes, toMinutes} from "../../lib/time";
@@ -240,9 +242,11 @@ function DayView({day, isToday}: {day: string; isToday: boolean}) {
 
   const dayClasses = classesOn(classes, day);
   const entries = dayEntries(sessions, dayClasses);
+  const reminders = useRemindersIn(day, day);
+  const reminderSpans = reminders.map((r) => ({start: reminderTime(r), end: reminderTime(r)}));
 
-  // Show a normal waking day, stretched to fit every session and class, the draft and the current time.
-  const {first: firstHour, last: lastHour} = hourRange(draft ? [...entries, draft] : entries, now);
+  // Show a normal waking day, stretched to fit every session and class, reminder, the draft and the current time.
+  const {first: firstHour, last: lastHour} = hourRange([...entries, ...reminderSpans, ...(draft ? [draft] : [])], now);
   const hours = Array.from({length: lastHour - firstHour}, (_, i) => firstHour + i);
   const top = (minutes: number) => (minutes - firstHour * 60) * PX_PER_MIN;
 
@@ -641,6 +645,8 @@ function DayView({day, isToday}: {day: string; isToday: boolean}) {
                   </div>
                 )}
 
+                <ReminderMarks reminders={reminders} top={top} />
+
                 {/* Current time. It runs behind the blocks (they sit above it), so it never
                     crosses a session's text or buttons. */}
                 {onTimeline(now, {first: firstHour, last: lastHour}) && (
@@ -668,7 +674,7 @@ function DayView({day, isToday}: {day: string; isToday: boolean}) {
           aria-label="Add a session"
           className="fixed inset-x-0 bottom-0 z-[60] px-3"
           // Above Safari's toolbar and the home indicator on phones that have them.
-          style={{paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))"}}
+          style={{paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))", bottom: "calc(-1 * var(--ios-gap, 0px))"}}
           onKeyDown={(e) => {
             if (e.key === "Escape") closeComposer();
           }}
