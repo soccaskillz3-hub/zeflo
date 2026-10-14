@@ -192,7 +192,7 @@ export default function AppHeader() {
   return (
     <>
       <header className="flex items-center justify-between gap-4">
-        <Link href="/" className="text-sm font-semibold tracking-[0.3em] text-white sm:tracking-[0.4em]">
+        <Link href="/" onClick={nav.open(SECTIONS[0])} className="text-sm font-semibold tracking-[0.3em] text-white sm:tracking-[0.4em]">
           ZEFLO
         </Link>
         <SectionLinks nav={nav} />
