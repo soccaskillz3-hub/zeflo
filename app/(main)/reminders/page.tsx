@@ -66,7 +66,7 @@ export default function RemindersPage({searchParams}: PageProps<"/reminders">) {
   const rows = {today, highlight: typeof opened === "string" ? opened : null, onToggle: toggle, onRemove: list.remove};
 
   return (
-    <div className="mt-6 grid gap-4 sm:mt-10 sm:gap-5">
+    <div className="mt-6 grid grid-cols-1 gap-4 sm:mt-10 sm:gap-5">
       <Card>
         <CardHead label="New reminder" />
         <AddForm onAdd={list.add} />
@@ -89,7 +89,7 @@ export default function RemindersPage({searchParams}: PageProps<"/reminders">) {
           {open.length === 0 && done.length === 0 ? (
             <p className="py-6 text-center text-sm text-white/60">No reminders yet. Add one above and Zeflo will ping you right on time.</p>
           ) : (
-            <div className="grid gap-6">
+            <div className="grid grid-cols-1 gap-6">
               {due.length > 0 && <Group label="Due" reminders={due} {...rows} due />}
               {upcoming.length > 0 && <Group label="Upcoming" reminders={upcoming} {...rows} />}
               {open.length === 0 && <p className="text-sm text-white/60">All done. Nothing waiting on you.</p>}
