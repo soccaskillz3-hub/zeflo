@@ -211,12 +211,17 @@ function WeekCard({
             Plan a few study sessions and your week fills in here, day by day.
           </p>
           {/* The week view on wider screens; phones plan day by day. */}
-          <Link href="/calendar/week" className={`mt-5 hidden sm:inline-flex ${primaryButton}`}>
-            Plan your week
-          </Link>
-          <Link href="/calendar" className={`mt-5 inline-flex sm:hidden ${primaryButton}`}>
-            Plan your week
-          </Link>
+          {/* .sf-primary sets its own display, so the show/hide lives on wrappers. */}
+          <div className="mt-5 hidden sm:block">
+            <Link href="/calendar/week" className={primaryButton}>
+              Plan your week
+            </Link>
+          </div>
+          <div className="mt-5 sm:hidden">
+            <Link href="/calendar" className={primaryButton}>
+              Plan your week
+            </Link>
+          </div>
         </div>
       ) : (
         <>
