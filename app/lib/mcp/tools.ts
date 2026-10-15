@@ -4,20 +4,22 @@ import {createClient, type SupabaseClient} from "@supabase/supabase-js";
 import type {McpServer} from "@modelcontextprotocol/server";
 import {z} from "zod";
 import {CLASS_COLUMNS, classFromRow, classesOn, upcomingTests, type ClassRow} from "../classMeetings";
-import {addDays, daysBetween, isDayKey} from "../days";
+import {addDays, daysBetween, isDayKey, toDate} from "../days";
 import {toMinutes} from "../time";
 
 // What a connected AI (Claude, ChatGPT, ...) can do in Zeflo, over MCP: read the user's classes,
-// tests, study sessions, reminders and progress, and plan, change or remove study sessions and
-// reminders. Each call runs
+// tests, study sessions, reminders and progress; plan, change or remove study sessions and
+// reminders; add tests and exams, and remove classes. Each call runs
 // as the signed-in user with their OAuth token, so the database's row level security keeps it to
 // their own data, exactly as in the app.
 
-export const INSTRUCTIONS = `Zeflo is a calm study planner for students. It holds the user's class timetable (imported from their school, read-only here), their tests and exams, the study sessions they plan around them, which they tick off as they finish, and reminders: their own to-dos due at a time ("Email the TA"), separate from study sessions, which notify them right when due.
+export const INSTRUCTIONS = `Zeflo is a calm study planner for students. It holds the user's class timetable (imported from their school; classes can be removed here but not changed), their tests and exams (which can be added here), the study sessions they plan around them, which they tick off as they finish, and reminders: their own to-dos due at a time ("Email the TA"), separate from study sessions, which notify them right when due.
 
 Dates are the user's own calendar days ("YYYY-MM-DD") and times are their local 24-hour clock ("HH:MM"). Zeflo doesn't know the user's time zone, so use today's date as the user knows it, and pass it as \`today\` to get_schedule.
 
 When planning study time: call get_schedule first, avoid the user's classes and existing sessions, keep sessions between 25 and 120 minutes with short breaks between long stretches, and spread work for a test over the days before it rather than cramming. Name sessions after the course and the task, e.g. "MATH 135 · practice midterm". Briefly confirm the plan with the user before adding many sessions, and always before removing any.
+
+When the user mentions a test, quiz, midterm or exam that isn't in upcomingTests, add it with add_tests so it shows on their calendar. Always confirm with the user before remove_classes, and say which classes (course, kind, times) will go.
 
 Reminders are for one-off things to do at a time, not study blocks: use add_reminders for "remind me to…", and study sessions for time spent studying. Reminder times are local too; Zeflo knows the user's time zone from their device, so pass \`timeZone\` (an IANA name like "America/Toronto") only if the user says they're somewhere else or a tool asks for it.`;
 
@@ -181,6 +183,7 @@ export function registerTools(server: McpServer) {
           date: d,
           weekday: new Date(`${d}T12:00:00`).toLocaleDateString("en-US", {weekday: "long"}),
           classes: classesOn(meetings, d).map((c) => ({
+            id: c.id,
             course: c.code,
             title: c.title || undefined,
             kind: c.component || undefined,
@@ -193,6 +196,7 @@ export function registerTools(server: McpServer) {
           reminders: reminders.filter((r) => r.date === d).map((r) => ({id: r.id, title: r.title, time: r.time, done: r.done})),
         })),
         upcomingTests: upcomingTests(meetings, today ?? from, 0).map((t) => ({
+          id: t.id,
           course: t.code,
           title: t.title || t.component || "Test",
           date: t.startsOn,
@@ -293,7 +297,7 @@ export function registerTools(server: McpServer) {
     "remove_study_sessions",
     {
       title: "Remove study sessions",
-      description: "Delete study sessions by id. Confirm with the user first. Classes can't be removed here.",
+      description: "Delete study sessions by id. Confirm with the user first. For classes, tests and exams, use remove_classes.",
       inputSchema: z.object({ids: z.array(z.string().uuid()).min(1).max(MAX_ADD)}),
       annotations: REMOVES,
     },
@@ -301,6 +305,79 @@ export function registerTools(server: McpServer) {
       const {data, error} = await db(ctx).from("study_sessions").delete().in("id", ids).select("id");
       if (error) return fail("Couldn't remove those sessions.");
       return reply({removed: (data as {id: string}[]).map((r) => r.id)});
+    },
+  );
+
+  server.registerTool(
+    "add_tests",
+    {
+      title: "Add tests",
+      description:
+        "Add tests, quizzes, midterms or exams to the user's calendar, each on one day. They show with their classes and in upcomingTests, so study sessions can be planned around them. Returns them with their ids.",
+      inputSchema: z.object({
+        tests: z
+          .array(
+            z.object({
+              course: z.string().trim().min(1).max(20).describe('The course code, e.g. "MATH 135"'),
+              title: z.string().trim().max(200).optional().describe('What it is, e.g. "Quiz 3" or "Final exam"'),
+              date: day,
+              start: time,
+              end: time,
+              location: z.string().trim().max(100).optional(),
+            }),
+          )
+          .min(1)
+          .max(MAX_ADD),
+      }),
+      annotations: ADDS,
+    },
+    async ({tests}, ctx) => {
+      const bad = tests.find((t) => toMinutes(t.end) <= toMinutes(t.start));
+      if (bad) return fail(`${bad.course} on ${bad.date} ends before it starts.`);
+      const {data, error} = await db(ctx)
+        .from("class_meetings")
+        .insert(
+          tests.map((t) => ({
+            code: t.course,
+            title: t.title ?? "",
+            component: "TST",
+            days: [toDate(t.date).getDay()],
+            starts_at: t.start,
+            ends_at: t.end,
+            location: t.location ?? "",
+            starts_on: t.date,
+            ends_on: t.date,
+          })),
+        )
+        .select(CLASS_COLUMNS);
+      if (error) return fail("Couldn't add those tests. Nothing was added.");
+      return reply({
+        added: (data as ClassRow[]).map(classFromRow).map((t) => ({
+          id: t.id,
+          course: t.code,
+          title: t.title || undefined,
+          date: t.startsOn,
+          start: t.start,
+          end: t.end,
+          location: t.location || undefined,
+        })),
+      });
+    },
+  );
+
+  server.registerTool(
+    "remove_classes",
+    {
+      title: "Remove classes",
+      description:
+        "Delete classes, tests or exams by id (from get_schedule). Removing a weekly class removes every meeting of it, not just one day. Confirm with the user first.",
+      inputSchema: z.object({ids: z.array(z.string().uuid()).min(1).max(MAX_ADD)}),
+      annotations: REMOVES,
+    },
+    async ({ids}, ctx) => {
+      const {data, error} = await db(ctx).from("class_meetings").delete().in("id", ids).select("id, code, component");
+      if (error) return fail("Couldn't remove those classes.");
+      return reply({removed: (data as {id: string; code: string; component: string}[]).map((r) => ({id: r.id, course: `${r.code} ${r.component}`.trim()}))});
     },
   );
 

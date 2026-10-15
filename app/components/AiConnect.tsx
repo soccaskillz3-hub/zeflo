@@ -180,7 +180,7 @@ export default function AiConnect({opens, onClose}: {opens: number; onClose?: ()
         )}
 
         <p className="mt-6 border-t border-dashed border-white/15 pt-4 text-[11px] leading-relaxed text-white/50">
-          Your AI can read your classes and progress, plan your study sessions and set reminders. It can&apos;t change your classes or settings, or see your
+          Your AI can read your classes and progress, plan your study sessions, set reminders, add tests and remove classes. It can&apos;t edit your classes or settings, or see your
           password, and you can disconnect it here any time.
         </p>
       </div>
