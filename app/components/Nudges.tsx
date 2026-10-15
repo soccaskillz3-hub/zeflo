@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import {usePathname} from "next/navigation";
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
+import AiConnect from "./AiConnect";
 import InstallGuide from "./InstallGuide";
 import Reminders from "./Reminders";
 import {useClasses} from "../lib/classes";
@@ -136,6 +137,8 @@ export default function Nudges() {
   const [done, setDone] = useState(false); // one "Not now" per visit: then nothing else
   const [note, setNote] = useState<{text: string; floating: boolean} | null>(null);
   const [installOpens, setInstallOpens] = useState(0);
+  const [aiOpens, setAiOpens] = useState(0);
+  const aiShown = useRef(false);
   const [remindersOpens, setRemindersOpens] = useState(0);
   // The install offer waits a moment after Today opens, so it isn't the first thing in the way.
   const [settled, setSettled] = useState(false);
@@ -160,6 +163,16 @@ export default function Nudges() {
     else if (status === "off" && !prefs.remindersHintDismissed) next = "reminders";
   }
   if (done) next = null;
+
+  // Zeflo's main draw, so it comes first: the connect-your-AI pop-up opens once, on the first
+  // page of the app, before anything else is offered. Closing it (any way) is what marks it seen.
+  const aiPending = loaded && prefs !== null && !prefs.aiIntroSeen;
+  useEffect(() => {
+    if (!aiPending || aiShown.current) return;
+    aiShown.current = true;
+    setAiOpens((n) => n + 1);
+  }, [aiPending]);
+  if (aiPending) next = null;
 
   const closeNote = useCallback(() => setNote(null), []);
   const notNow = (text: string, remember: () => void, floating = false) => () => {
@@ -192,6 +205,7 @@ export default function Nudges() {
       )}
       <InstallGuide opens={installOpens} />
       <Reminders opens={remindersOpens} />
+      <AiConnect opens={aiOpens} onClose={() => setPrefs({aiIntroSeen: true})} />
     </>
   );
 }

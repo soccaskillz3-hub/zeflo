@@ -32,6 +32,7 @@ export type Prefs = {
   remindTests: boolean; // the evening before a test
   remindStreak: boolean; // at 8 PM, when the streak needs a session
   remindersHintDismissed: boolean; // said "Not now" to the reminders card on Today
+  aiIntroSeen: boolean; // the connect-your-AI pop-up has been shown (and closed) once
 };
 
 const DEFAULTS: Prefs = {
@@ -44,6 +45,7 @@ const DEFAULTS: Prefs = {
   remindTests: true,
   remindStreak: true,
   remindersHintDismissed: false,
+  aiIntroSeen: false,
 };
 
 const oneOf = <T extends string>(value: unknown, allowed: readonly T[], fallback: T) =>
@@ -64,6 +66,7 @@ function parse(raw: Record<string, unknown>): Prefs {
     remindTests: raw.remindTests !== false,
     remindStreak: raw.remindStreak !== false,
     remindersHintDismissed: raw.remindersHintDismissed === true,
+    aiIntroSeen: raw.aiIntroSeen === true,
   };
 }
 

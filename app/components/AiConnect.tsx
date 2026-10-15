@@ -36,7 +36,7 @@ function Step({n, title, children}: {n: number; title: string; children?: React.
 
 // Opens each time `opens` goes up (the parent counts clicks), so it never depends on hearing
 // back that the browser closed it (Escape, the backdrop or ×).
-export default function AiConnect({opens}: {opens: number}) {
+export default function AiConnect({opens, onClose}: {opens: number; onClose?: () => void}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [grants, setGrants] = useState<OAuthGrant[] | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
@@ -51,6 +51,8 @@ export default function AiConnect({opens}: {opens: number}) {
       .auth.oauth.listGrants()
       .then(({data}) => setGrants(data ?? []));
   }, [opens]);
+
+  const command = `claude mcp add --transport http zeflo ${address || "https://…/api/mcp"}`;
 
   const copy = (text: string) =>
     navigator.clipboard.writeText(text).then(() => {
@@ -67,6 +69,7 @@ export default function AiConnect({opens}: {opens: number}) {
     <dialog
       ref={dialog}
       aria-labelledby="ai-connect-title"
+      onClose={onClose}
       // Clicking the dimmed backdrop (the dialog element itself, outside the panel) closes it.
       onClick={(e) => e.target === e.currentTarget && dialog.current?.close()}
       className="sf-panel sf-pop sf-dialog-fit m-auto w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border p-0 font-mono text-white [text-shadow:none] backdrop:bg-slate-950/55 backdrop:backdrop-blur-[2px]"
@@ -114,6 +117,20 @@ export default function AiConnect({opens}: {opens: number}) {
             <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-white/60">
               <li>
                 <span className="text-white/85">Claude:</span> Settings → Connectors → Add custom connector. Free plans included.
+              </li>
+              <li>
+                <span className="text-white/85">Claude Code:</span> run this in your terminal, then type <code className="text-white/85">/mcp</code> in
+                Claude Code to sign in.
+                <div className="mt-1.5 flex items-center gap-2">
+                  <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-md bg-black/25 px-2.5 py-1.5 text-[11px] text-white/85">
+                    {command}
+                  </code>
+                  {address && (
+                    <button type="button" onClick={() => copy(command)} className={smallButton}>
+                      {copied === command ? "Copied" : "Copy"}
+                    </button>
+                  )}
+                </div>
               </li>
               <li>
                 <span className="text-white/85">ChatGPT:</span>{" "}
