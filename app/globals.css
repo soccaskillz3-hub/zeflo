@@ -379,7 +379,9 @@ body {
   text-shadow: 0 0 40px var(--focus-glow), 0 0 120px var(--focus-glow);
   white-space: nowrap;
 }
-.sf-focus-time[data-phase="focus"] .sf-focus-colon { animation: sf-colon 2s ease-in-out infinite; }
+/* will-change lifts the blinking colon onto its own layer, so the blink is a cheap fade of a
+   finished picture instead of repainting the colon's wide glow every frame. */
+.sf-focus-time[data-phase="focus"] .sf-focus-colon { animation: sf-colon 2s ease-in-out infinite; will-change: opacity; }
 .sf-focus-time[data-phase="break"] { animation: sf-breathe 6s ease-in-out infinite; }
 .sf-focus-time[data-phase="complete"] { animation: sf-glow 2.4s ease-in-out infinite; }
 
@@ -2363,3 +2365,17 @@ html:has(.wl-story) {
 :root[data-resting="still"] .sf-backdrop *::after {
   animation-play-state: paused !important;
 }
+
+/* The clock and focus timer sit outside the backdrop, so they keep going while the scene rests,
+   but a resting clock doesn't need 60 frames a second: its sweeping hand, bar and ring tick once a
+   second (still the right time), and the blinking colon and glowing digits hold still. */
+:root[data-resting="still"] [style*="animation: sf-clock"] {
+  animation-timing-function: steps(60, jump-end) !important;
+}
+:root[data-resting="still"] .sf-clock-colon,
+:root[data-resting="still"] .sf-focus-time,
+:root[data-resting="still"] .sf-focus-time .sf-focus-colon {
+  animation: none !important;
+}
+/* The digits repaint every second, and the wide outer glow is the costly part of that. */
+:root[data-resting="still"] .sf-focus-time { text-shadow: 0 0 40px var(--focus-glow); }

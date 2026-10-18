@@ -159,7 +159,7 @@ export function useFocusTimer(sessionId: string | null, minutes: number) {
   }, [state]);
 
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 250);
+    const id = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(id);
   }, []);
 
