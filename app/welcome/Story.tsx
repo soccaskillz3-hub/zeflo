@@ -24,7 +24,7 @@ const CHAPTERS = [
   {
     kicker: "Planning",
     title: "Ask your AI to plan the week.",
-    body: "Connect Claude and tell it what's coming up. It sees your classes and your tests, finds the gaps, and puts study sessions straight onto your calendar.",
+    body: "Connect Claude or ChatGPT and tell it what's coming up. It sees your classes and your tests, finds the gaps, and puts study sessions straight onto your calendar.",
     versus: "you work out when, on your own.",
   },
   {

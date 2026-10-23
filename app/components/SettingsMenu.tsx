@@ -597,7 +597,7 @@ export default function SettingsMenu() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[11px] uppercase tracking-[0.25em] text-scene-ink">Your AI</span>
-              <span className="mt-0.5 block truncate text-xs text-white/70">Plan your study with Claude</span>
+              <span className="mt-0.5 block truncate text-xs text-white/70">Plan with Claude or ChatGPT</span>
             </span>
             <span className="text-white/50 transition group-hover:translate-x-0.5 group-hover:text-white" aria-hidden>
               →
