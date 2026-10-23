@@ -73,7 +73,7 @@ It reads your classes, upcoming tests, study sessions, reminders and streak, the
 
 - **Set up in a minute** — **Settings → Your AI** has the connector address, the steps for your assistant, and prompts to try.
 - **You stay in charge** — you approve each assistant on a Zeflo page that spells out what it can and can't do, and disconnect it any time from the same place. Assistants can read but never change your classes or settings: the database itself enforces that.
-- **ChatGPT** is in progress.
+- **Works with ChatGPT Plus and Pro** — turn on Developer mode in ChatGPT (Settings → Apps & Connectors → Advanced settings), then add Zeflo with OAuth. Claude works on its free plan too.
 
 <p align="center">
   <img src="docs/screenshots/ai.jpg" alt="The Your AI window: what it does, the connector address and the steps to connect" width="70%">

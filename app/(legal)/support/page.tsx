@@ -19,7 +19,9 @@ export default function SupportPage() {
           <strong>Claude:</strong> in Zeflo, open Settings → Your AI and follow the steps there. It works on Claude&apos;s free plan too.
         </li>
         <li>
-          <strong>ChatGPT:</strong> coming soon. We&apos;re working on it.
+          <strong>ChatGPT:</strong> works on ChatGPT Plus and Pro. In Zeflo, open Settings → Your AI and copy your connector address. In
+          ChatGPT, open Settings → Apps &amp; Connectors → Advanced settings and turn on Developer mode, then choose Create, paste the address
+          and set Authentication to OAuth. The free plan can&apos;t add connectors yet.
         </li>
         <li>
           <strong>To disconnect</strong> an assistant, open Settings → Your AI in Zeflo and choose Disconnect next to it.
