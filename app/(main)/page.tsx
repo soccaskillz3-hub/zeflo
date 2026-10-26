@@ -283,11 +283,11 @@ function UpcomingTests({today, clock, className = ""}: {today: string; clock: nu
           const soon = days <= 7;
           return (
             <li key={t.id} className="flex items-center gap-5 py-3.5 first:pt-1 last:pb-0">
-              <p className={`w-20 shrink-0 tabular-nums ${soon ? "text-scene-ink" : "text-white/85"}`}>
+              <p className={`w-24 shrink-0 tabular-nums ${soon ? "text-scene-ink" : "text-white/85"}`}>
                 {days === 0 ? (
-                  <span className="sf-serif text-2xl">Today</span>
+                  <span className="sf-serif text-xl leading-none">Today</span>
                 ) : days === 1 ? (
-                  <span className="sf-serif text-2xl">Tomorrow</span>
+                  <span className="sf-serif text-xl leading-none">Tomorrow</span>
                 ) : (
                   <>
                     <span className="sf-serif text-4xl leading-none">{days}</span>
