@@ -18,6 +18,7 @@ import {readStill, setStill} from "../lib/stillScene";
 import {useSound} from "../lib/sound";
 import {THEMES, type Theme} from "../lib/themes";
 import {useReminders} from "../lib/reminders";
+import {CONTACT, SUPPORT_EMAIL} from "../lib/site";
 import {useDismiss} from "../lib/useDismiss";
 import {TIMES, WEATHERS, type TimeOfDay, type Weather} from "../lib/weather";
 import type {SoundSettings} from "../lib/audio/engine";
@@ -474,6 +475,9 @@ function LogOutButton() {
   );
 }
 
+// An email to whoever runs Zeflo, subject already filled in (or the GitHub page without one).
+const FEEDBACK_HREF = SUPPORT_EMAIL ? `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Zeflo feedback")}` : CONTACT.href;
+
 // Who's logged in, and the ways out. Logging out also clears what Zeflo kept in this browser.
 function AccountFooter({onDelete}: {onDelete: () => void}) {
   const account = useAccount();
@@ -487,14 +491,22 @@ function AccountFooter({onDelete}: {onDelete: () => void}) {
         </p>
         <LogOutButton />
       </form>
-      <button
-        type="button"
-        aria-haspopup="dialog"
-        onClick={onDelete}
-        className="mt-2 text-[11px] text-white/45 underline decoration-white/20 underline-offset-4 transition hover:text-rose-200 hover:decoration-rose-200/50"
-      >
-        Delete account
-      </button>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
+        <a href={FEEDBACK_HREF} className="text-white/70 underline decoration-white/25 underline-offset-4 transition hover:text-white hover:decoration-white/60">
+          Send feedback
+        </a>
+        <Link href="/support" className="text-white/70 underline decoration-white/25 underline-offset-4 transition hover:text-white hover:decoration-white/60">
+          Help
+        </Link>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={onDelete}
+          className="ml-auto text-white/45 underline decoration-white/20 underline-offset-4 transition hover:text-rose-200 hover:decoration-rose-200/50"
+        >
+          Delete account
+        </button>
+      </div>
     </div>
   );
 }
