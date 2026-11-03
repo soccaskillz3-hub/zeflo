@@ -10,8 +10,9 @@ const OPEN_PAGES = ["/auth/confirm", "/privacy", "/terms", "/support"];
 // Not pages, and no login cookies involved, so they skip all of the below: the AI connector
 // (it checks its own OAuth token) and the metadata telling assistants where to sign in; the
 // reminders sender (Supabase calls it with a shared secret); and the app manifest and service
-// worker, which phones fetch on their own when Zeflo is added to the Home Screen.
-const MACHINE_PATHS = ["/api/mcp", "/.well-known", "/api/reminders", "/manifest.webmanifest", "/sw.js"];
+// worker, which phones fetch on their own when Zeflo is added to the Home Screen; and the
+// preview image apps fetch when a Zeflo link is shared.
+const MACHINE_PATHS = ["/api/mcp", "/.well-known", "/api/reminders", "/manifest.webmanifest", "/sw.js", "/opengraph-image", "/twitter-image"];
 
 const matches = (path: string, pages: string[]) => pages.some((p) => path === p || path.startsWith(`${p}/`));
 

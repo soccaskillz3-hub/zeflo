@@ -48,8 +48,17 @@ const SPLASH_SIZES = [
 ] as const;
 
 export const metadata: Metadata = {
+  // Where shared links and their preview image (opengraph-image.tsx) point.
+  metadataBase: new URL("https://zeflo.vercel.app"),
   title: "Zeflo",
   description: "Plan your study day and track your progress.",
+  openGraph: {
+    siteName: "Zeflo",
+    title: "Zeflo: plan your study day, then actually do it",
+    description: "A free study planner for students. Import your timetable, plan study sessions with your AI, and focus.",
+    type: "website",
+  },
+  twitter: {card: "summary_large_image"},
   // Added to an iPhone's Home Screen, Zeflo opens as an app (see manifest.ts), with the scene
   // running up under the status bar as it does in Safari.
   appleWebApp: {
