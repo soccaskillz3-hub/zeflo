@@ -203,12 +203,12 @@ body {
   display: none;
 }
 
-/* Calendar on phones: the day scrolls inside its own box, fading at the edges, so the page stays short. */
+/* Calendar on phones: the day scrolls inside its own box, fading at the edges, so the page stays short.
+   Scrolling past the box's end carries on to the page, which lifts the box's bottom clear of the tab bar. */
 @media (max-width: 639px) {
   .sf-day-scroll {
     max-height: 60svh;
     overflow-y: auto;
-    overscroll-behavior: contain;
     scrollbar-width: none;
     mask-image: linear-gradient(to bottom, transparent, #000 32px, #000 calc(100% - 32px), transparent);
   }
